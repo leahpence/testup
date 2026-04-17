@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📺 Events Schedule - Time UK GMT </title>
+    <style>
+        :root { --bg: #0b0f19; --card: #121826; --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6; --ok: #22c55e; --err: #ef4444; --player-bg: #000; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; scroll-behavior: smooth; }
+        .wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; margin: 0 0 20px; font-weight: 600; }
+        
+        /* Controls */
+        .ctrl { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        .search-box:focus { border-color: var(--accent); }
+        .search-box::placeholder { color: var(--muted); }
+        
+        button { padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.15s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { opacity: 0.4; cursor: wait; transform: none; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: var(--err); }
+        .btn-secondary { background: #334155; }
+        .btn-secondary:hover { background: #475569; }
+        
+        /* Status */
+        #status { text-align: center; padding: 12px; margin: 10px 0; border-radius: 6px; background: #1e293b; color: var(--muted); min-height: 20px; font-size: 14px; }
+        .err { background: rgba(239,68,68,0.15); color: var(--err); border: 1px solid rgba(239,68,68,0.3); }
+        .ok { background: rgba(34,197,94,0.15); color: var(--ok); border: 1px solid rgba(34,197,94,0.3); }
+        
+        /* Section Headers */
+        .section { margin-bottom: 24px; scroll-margin-top: 100px; }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            padding: 12px 16px;
+            margin: 20px 0 10px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .section-title::before { content: "📅"; font-size: 16px; }
+        .section-title:hover { background: linear-gradient(135deg, #263345, #151e2e); border-left-color: #60a5fa; }
+        .section-title.matched {
+            border-left-color: var(--ok);
+            box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25);
+            animation: pulse 1.5s ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25); }
+            50% { box-shadow: 0 0 0 4px var(--ok), 0 6px 28px rgba(34, 197, 94, 0.4); }
+        }
+        .section-title .match-highlight {
+            background: rgba(34, 197, 94, 0.25);
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        
+        /* No Results Message */
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 14px;
+            display: none;
+        }
+        .no-results.show { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Event Button Rows */
+        .events-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .event-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+            width: 100%;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .event-btn:hover {
+            background: #e50914;
+            border-color: #e50914;
+            transform: translateY(-1px);
+        }
+        .event-btn:active { transform: scale(0.99); }
+        .event-btn.search-match {
+            border-color: var(--ok);
+            box-shadow: 0 0 0 2px var(--ok);
+        }
+        
+        .event-time {
+            min-width: 60px;
+            font-weight: bold;
+            color: #ff6b6b;
+            font-size: 12px;
+            background: rgba(255, 107, 107, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .event-btn:hover .event-time { color: white; background: rgba(255,255,255,0.2); }
+        
+        .event-info { flex: 1; min-width: 0; }
+        .event-title {
+            font-weight: 500;
+            font-size: 12px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event-channel {
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.95;
+        }
+        .event-btn:hover .event-channel { color: rgba(255,255,255,0.9); }
+        
+        .event-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .event-chevron {
+            color: var(--muted);
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        .event-btn:hover .event-chevron {
+            color: white;
+            transform: translateX(2px);
+        }
+        .player-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        /* ===== PLAYER UI - MATCHES HTML 1 EXACTLY ===== */
+        #playerUI { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: black; 
+            z-index: 9999; 
+        }
+        #streamFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Exit Button - Fixed position top-right */
+        #exitBtn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10000;
+            background: rgba(229, 9, 20, 0.95);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            font-size: 13px;
+        }
+        #exitBtn:hover { background: rgba(229, 9, 20, 1); }
+        
+        /* Current Stream Label - Fixed position bottom-center */
+        #currentStream {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: none;
+            font-family: monospace;
+            white-space: nowrap;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* 🔥 Player Switch Bar - EXACT MATCH TO HTML 1 */
+        #playerSwitch {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 6px;
+            z-index: 10000;
+        }
+        .player-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.15s;
+        }
+        .player-btn:hover {
+            background: #e50914;
+            border-color: #e50914;
+        }
+        .active-player {
+            background: #e50914;
+            border-color: #e50914;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Empty state */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .empty-state svg { width: 60px; height: 60px; margin-bottom: 12px; opacity: 0.5; }
+        
+        /* Section navigation helper */
+        .section-nav-hint {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 4px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap" id="mainUI">
+        <h1>📺 Events Schedule - Time UK GMT</h1>
+        
+        <!-- Controls: Search + Fetch Button -->
+        <div class="ctrl">
+            <input type="text" id="sectionSearch" class="search-box" placeholder="🔍 Search sections or events: hockey, tennis, wwe...">
+            <button id="btn" onclick="run()">🚀 Fetch Events</button>
+            <button class="btn-secondary" id="clearSearch" onclick="clearSectionSearch()" title="Clear search">✕</button>
+        </div>
+        <div class="section-nav-hint">💡 Type a keyword to find sections or events • Press <kbd>Enter</kbd> to search</div>
+        
+        <div id="status">Click "Fetch Events" to load the schedule</div>
+        <div id="noResults" class="no-results">🔍 No sections or events match "<span id="searchTerm"></span>"</div>
+        <div id="results"></div>
+    </div>
+
+    <!-- Stream Player UI - MATCHES HTML 1 STRUCTURE -->
+    <div id="playerUI">
+        <iframe id="streamFrame" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
+        <!-- Exit Button -->
+        <button id="exitBtn" onclick="exitStream()">✕ Exit</button>
+        <!-- Current Stream Label -->
+        <span id="currentStream">Loading stream...</span>
+        <!-- Player Switch Bar -->
+        <div id="playerSwitch"></div>
+    </div>
+
+    <script>
+        // ===== CONFIG =====
+        const TARGET_URL = 'https://dlstreams.top';
+        const PROXIES = [
+            u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+            u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+            u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+            u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
+            u => `https://cors.isomorphic-git.org/${encodeURIComponent(u)}`,
+            u => `https://proxy.cors.sh/${encodeURIComponent(u)}`
+        ];        
+
+        // ===== PLAYER SWITCHING VARIABLES (FROM HTML 1) =====
+        let players = [];
+        let currentIndex = 0;
+        let currentLabel = "";
+
+        function getPlayers(channelId) {
+            const base = TARGET_URL;
+            return [
+                `${base}/stream/stream-${channelId}.php`,
+                `${base}/cast/stream-${channelId}.php`,
+                `${base}/watch/stream-${channelId}.php`,
+                `${base}/plus/stream-${channelId}.php`,
+                `${base}/casting/stream-${channelId}.php`,
+                `${base}/player/stream-${channelId}.php`
+            ];
+        }
+
+        // ===== PLAYER SWITCHING FUNCTIONS (FROM HTML 1) =====
+        function loadPlayer(i) {
+            currentIndex = i;
+            document.getElementById('streamFrame').src = players[i];
+            document.getElementById('currentStream').textContent = `${currentLabel} (Player ${i+1})`;
+
+            document.querySelectorAll('.player-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active-player', idx === i);
+            });
+        }
+
+        function renderSwitch() {
+            const switchBar = document.getElementById('playerSwitch');
+            switchBar.innerHTML = "";
+
+            players.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = `P${i+1}`;
+                btn.onclick = () => loadPlayer(i);
+                switchBar.appendChild(btn);
+            });
+        }
+
+        // ===== SEARCH FUNCTIONALITY =====
+        const sectionSearchInput = document.getElementById('sectionSearch');
+        const noResultsEl = document.getElementById('noResults');
+        const searchTermEl = document.getElementById('searchTerm');
+        let allSections = [];
+
+        sectionSearchInput.addEventListener('input', debounce(handleSectionSearch, 150));
+        sectionSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); handleSectionSearch(); }
+            if (e.key === 'Escape') { clearSectionSearch(); sectionSearchInput.blur(); }
+        });
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => { clearTimeout(timeout); func(...args); };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function handleSectionSearch() {
+            const query = sectionSearchInput.value.trim().toLowerCase();
+            searchTermEl.textContent = query || '...';
+            
+            noResultsEl.classList.remove('show');
+            
+            document.querySelectorAll('.section-title').forEach(el => {
+                el.classList.remove('matched');
+                if (el.dataset.originalText) el.textContent = el.dataset.originalText;
+            });
+            document.querySelectorAll('.event-btn.search-match').forEach(btn => {
+                btn.classList.remove('search-match');
+            });
+            
+            if (!query) {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            
+            const matches = [];
+            
+            allSections.forEach(section => {
+                const title = section.title.toLowerCase();
+                let sectionMatches = title.includes(query);
+                let matchedEventBtns = [];
+                
+                const eventsContainer = section.element.querySelector('.events-container');
+                if (eventsContainer) {
+                    const eventBtns = eventsContainer.querySelectorAll('.event-btn');
+                    eventBtns.forEach(btn => {
+                        const eventTitle = (btn.querySelector('.event-title')?.textContent || '').toLowerCase();
+                        const eventChannel = (btn.querySelector('.event-channel')?.textContent || '').toLowerCase();
+                        const eventTime = (btn.querySelector('.event-time')?.textContent || '').toLowerCase();
+                        
+                        if (eventTitle.includes(query) || eventChannel.includes(query) || eventTime.includes(query)) {
+                            sectionMatches = true;
+                            matchedEventBtns.push(btn);
+                        }
+                    });
+                }
+                
+                if (sectionMatches) {
+                    matches.push({ section: section, matchedEvents: matchedEventBtns });
+                }
+            });
+            
+            if (matches.length === 0) {
+                noResultsEl.classList.add('show');
+                return;
+            }
+            
+            const firstMatch = matches[0];
+            const titleEl = firstMatch.section.element.querySelector('.section-title');
+            
+            const originalTitle = titleEl.dataset.originalText || titleEl.textContent;
+            if (!titleEl.dataset.originalText) titleEl.dataset.originalText = originalTitle;
+            
+            const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+            titleEl.innerHTML = originalTitle.replace(regex, '<span class="match-highlight">$1</span>');
+            
+            firstMatch.matchedEvents.forEach(btn => {
+                btn.classList.add('search-match');
+            });
+            
+            titleEl.classList.add('matched');
+            requestAnimationFrame(() => {
+                titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+            
+            setTimeout(() => {
+                titleEl.classList.remove('matched');
+                titleEl.textContent = originalTitle;
+                firstMatch.matchedEvents.forEach(btn => btn.classList.remove('search-match'));
+            }, 3000);
+        }
+
+        function clearSectionSearch() {
+            sectionSearchInput.value = '';
+            handleSectionSearch();
+        }
+
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // ===== CORE SCRAPING =====
+        async function run() {
+            const btn = document.getElementById('btn');
+            const resDiv = document.getElementById('results');
+            btn.disabled = true;
+            resDiv.innerHTML = '';
+            allSections = [];
+            setStatus('⏳ Fetching events from dlstreams.top...');
+
+            let html = null;
+            for (let i = 0; i < PROXIES.length; i++) {
+                try {
+                    setStatus(`🔄 Proxy ${i+1}/${PROXIES.length}...`);
+                    const ctrl = new AbortController();
+                    const t = setTimeout(() => ctrl.abort(), 8000);
+                    const r = await fetch(PROXIES[i](TARGET_URL), { signal: ctrl.signal });
+                    clearTimeout(t);
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    html = await r.text();
+                    if (!html.includes('<') || html.length < 500) throw new Error('Empty response');
+                    break;
+                } catch (e) {
+                    console.warn(`Proxy ${i+1} failed:`, e.message);
+                    if (i === PROXIES.length - 1) {
+                        setStatus(`❌ All proxies blocked. Site may prevent automated access.`, 'err');
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+            }
+
+            setStatus('🔍 Parsing events...');
+            try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const categories = [];
+                
+                doc.querySelectorAll('div.schedule__category.is-expanded').forEach(catEl => {
+                    const catHeader = catEl.querySelector('.schedule__catHeader .card__meta');
+                    const categoryTitle = catHeader?.innerText.trim() || 'Events';
+                    
+                    const events = [];
+                    catEl.querySelectorAll('div.schedule__event').forEach(el => {
+                        try {
+                            const title = el.querySelector('.schedule__eventTitle')?.innerText.trim();
+                            if (!title) return;
+                            const tm = el.querySelector('.schedule__time');
+                            const time = tm?.getAttribute('data-time') || tm?.innerText.trim() || 'N/A';
+                            const ch = el.querySelector('.schedule__channels');
+                            if (!ch) return;
+                            const ln = ch.querySelector('a[href]');
+                            if (!ln) return;
+                            const href = ln.getAttribute('href');
+                            const channel = ln.getAttribute('title') || ln.innerText.trim();
+                            
+                            let finalUrl = href;
+                            let channelId = null;
+                            if (href?.includes('id=')) {
+                                channelId = href.split('id=')[1].split('&')[0].trim();
+                                finalUrl = `${TARGET_URL.replace(/\/+$/,'')}/stream/stream-${channelId}.php`;
+                            } else if (href && !href.startsWith('http')) {
+                                try { finalUrl = new URL(href, TARGET_URL).href; } catch {}
+                            }
+                            
+                            events.push({title, time, channel, url: finalUrl, channelId, baseHref: href});
+                        } catch(e) { console.warn('Event parse error:', e); }
+                    });
+                    
+                    if (events.length > 0) categories.push({ title: categoryTitle, events });
+                });
+
+                renderCategories(categories);
+            } catch (e) {
+                setStatus(`❌ Parse failed: ${e.message}`, 'err');
+                console.error(e);
+            } finally { btn.disabled = false; }
+        }
+
+        function renderCategories(categories) {
+            const container = document.getElementById('results');
+            container.innerHTML = '';
+            allSections = [];
+            
+            if (categories.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                        <p>No events found. The site may use JavaScript rendering or block scraping.</p>
+                    </div>`;
+                setStatus('✅ Loaded, but 0 events found', 'err');
+                return;
+            }
+            
+            let totalEvents = 0;
+            categories.forEach(cat => totalEvents += cat.events.length);
+            setStatus(`✅ Found ${totalEvents} events across ${categories.length} categories`, 'ok');
+            
+            categories.forEach(category => {
+                const section = document.createElement('div');
+                section.className = 'section';
+                section.dataset.sectionTitle = category.title.toLowerCase();
+                
+                const titleEl = document.createElement('div');
+                titleEl.className = 'section-title';
+                titleEl.textContent = category.title;
+                titleEl.dataset.originalText = category.title;
+                section.appendChild(titleEl);
+                
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'events-container';
+                
+                category.events.forEach(ev => {
+                    const hasPlayers = ev.channelId && getPlayers(ev.channelId).length > 1;
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'event-btn';
+                    btn.onclick = (e) => {
+                        e.preventDefault();
+                        // DIRECT LAUNCH TO PLAYER 1 - NO MODAL
+                        if (ev.channelId) {
+                            players = getPlayers(ev.channelId);
+                            currentIndex = 0;
+                            currentLabel = `${ev.title} • ${ev.channel}`;
+                            openPlayer(players[0]);
+                        } else if (ev.url) {
+                            players = [ev.url];
+                            currentIndex = 0;
+                            currentLabel = `${ev.title} • ${ev.channel}`;
+                            openPlayer(ev.url);
+                        }
+                    };
+                    
+                    btn.innerHTML = `
+                        <span class="event-time">${esc(ev.time)}</span>
+                        <div class="event-info">
+                            <div class="event-title">${esc(ev.title)}</div>
+                            <div class="event-channel">📡 ${esc(ev.channel)}</div>
+                        </div>
+                        <div class="event-action">
+                            ${hasPlayers ? `<span class="player-badge">▶ P1</span>` : ''}
+                            <i class="event-chevron" aria-hidden="true">›</i>
+                        </div>
+                    `;
+                    eventsContainer.appendChild(btn);
+                });
+                
+                section.appendChild(eventsContainer);
+                container.appendChild(section);
+                
+                allSections.push({ title: category.title, element: section });
+            });
+            
+            if (sectionSearchInput.value.trim()) handleSectionSearch();
+        }
+
+        // ===== STREAM LAUNCHING (MATCHES HTML 1 openPlayer/loadPlayer) =====
+        function openPlayer(url) {
+            document.getElementById('mainUI').classList.add('hidden');
+            document.getElementById('playerUI').style.display = 'block';
+            document.getElementById('exitBtn').style.display = 'block';
+            document.getElementById('playerSwitch').style.display = 'flex';
+            document.getElementById('currentStream').style.display = 'block';
+
+            loadPlayer(0);
+            renderSwitch();
+        }
+
+        function exitStream() {
+            document.getElementById('playerUI').style.display = 'none';
+            document.getElementById('exitBtn').style.display = 'none';
+            document.getElementById('playerSwitch').style.display = 'none';
+            document.getElementById('currentStream').style.display = 'none';
+            document.getElementById('mainUI').classList.remove('hidden');
+            document.getElementById('streamFrame').src = "";
+            // Reset player state
+            players = [];
+            currentIndex = 0;
+            currentLabel = "";
+        }
+
+        // ===== UTILS =====
+        function setStatus(msg, type) {
+            const el = document.getElementById('status');
+            el.innerHTML = msg;
+            el.className = type || '';
+        }
+        function esc(s) { 
+            if(!s) return ''; 
+            const d = document.createElement('div'); 
+            d.textContent = s; 
+            return d.innerHTML; 
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('playerUI').style.display === 'block') exitStream();
+                else if (document.activeElement === sectionSearchInput) { clearSectionSearch(); sectionSearchInput.blur(); }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                sectionSearchInput.focus();
+                sectionSearchInput.select();
+            }
+        });
+    </script>
+</body>
+</html>
