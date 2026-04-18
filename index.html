@@ -283,7 +283,7 @@
 
     <!-- Stream Player UI - MATCHES HTML 1 STRUCTURE -->
     <div id="playerUI">
-        <iframe id="streamFrame" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
+        <iframe id="streamFrame" allowfullscreen></iframe>
         <!-- Exit Button -->
         <button id="exitBtn" onclick="exitStream()">✕ Exit</button>
         <!-- Current Stream Label -->
@@ -296,7 +296,6 @@
         // ===== CONFIG =====
         const TARGET_URL = 'https://dlstreams.top';
         const PROXIES = [
-            u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
             u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
             u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
             u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
