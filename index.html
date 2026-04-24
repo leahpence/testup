@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📺 Events Schedule - Time UK GMT</title>
     <style>
-        :root { --bg: #0b0f19; --card: #121826; --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6; --ok: #22c55e; --err: #ef4444; }
+        :root { --bg: #0b0f19; --card: #121826; --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6; --ok: #22c55e; --err: #ef4444; --player-bg: #000; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; scroll-behavior: smooth; }
         .wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
@@ -14,166 +14,258 @@
         /* Controls */
         .ctrl { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
         .search-box {
-            flex: 1; min-width: 200px; padding: 12px 18px;
-            background: #1a1a1a; border: 2px solid #444; border-radius: 25px;
-            color: white; font-size: 15px; outline: none; transition: border-color 0.2s;
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 25px;
+            color: white;
+            font-size: 14px;
+            outline: none;
         }
-        .search-box:focus { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,0.3); }
+        .search-box:focus { border-color: var(--accent); }
         .search-box::placeholder { color: var(--muted); }
         
-        button { padding: 12px 20px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.15s; font-size: 14px; }
+        button { padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.15s; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
-        button:disabled { opacity: 0.4; cursor: wait; }
+        button:disabled { opacity: 0.4; cursor: wait; transform: none; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: var(--err); }
         .btn-secondary { background: #334155; }
         .btn-secondary:hover { background: #475569; }
         
         /* Status */
-        #status { text-align: center; padding: 12px; margin: 10px 0; border-radius: 8px; background: #1e293b; color: var(--muted); min-height: 24px; font-size: 14px; }
+        #status { text-align: center; padding: 12px; margin: 10px 0; border-radius: 6px; background: #1e293b; color: var(--muted); min-height: 20px; font-size: 14px; }
         .err { background: rgba(239,68,68,0.15); color: var(--err); border: 1px solid rgba(239,68,68,0.3); }
         .ok { background: rgba(34,197,94,0.15); color: var(--ok); border: 1px solid rgba(34,197,94,0.3); }
         
         /* Section Headers */
-        .section { margin-bottom: 24px; scroll-margin-top: 120px; }
+        .section { margin-bottom: 24px; scroll-margin-top: 100px; }
         .section-title {
-            font-size: 18px; font-weight: 600; padding: 14px 18px; margin: 20px 0 12px;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 12px 16px;
+            margin: 20px 0 10px;
             background: linear-gradient(135deg, #1e293b, #0f172a);
-            border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0;
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         .section-title::before { content: "📅"; font-size: 16px; }
+        .section-title:hover { background: linear-gradient(135deg, #263345, #151e2e); border-left-color: #60a5fa; }
         .section-title.matched {
             border-left-color: var(--ok);
-            box-shadow: 0 0 0 3px var(--ok), 0 8px 25px rgba(34, 197, 94, 0.35);
-            animation: pulse 1.2s ease-in-out;
+            box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25);
+            animation: pulse 1.5s ease-in-out;
         }
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 3px var(--ok), 0 8px 25px rgba(34, 197, 94, 0.35); }
-            50% { box-shadow: 0 0 0 6px var(--ok), 0 12px 35px rgba(34, 197, 94, 0.5); }
+            0%, 100% { box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25); }
+            50% { box-shadow: 0 0 0 4px var(--ok), 0 6px 28px rgba(34, 197, 94, 0.4); }
+        }
+        .section-title .match-highlight {
+            background: rgba(34, 197, 94, 0.25);
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: 700;
         }
         
-        /* Event Buttons */
-        .events-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .event-btn {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 15px; background: var(--card); border: 2px solid #333;
-            border-radius: 8px; cursor: pointer; transition: all 0.15s;
-            text-align: left; width: 100%; gap: 12px; font-size: 14px;
-        }
-        .event-btn:hover { background: #e50914; border-color: #e50914; transform: translateY(-2px); }
-        .event-btn:active { transform: scale(0.99); }
-        
-        /* 🔥 SEARCH MATCH STYLES - GUARANTEED VISIBILITY */
-        .event-btn.found-match {
-            border: 3px solid var(--ok) !important;
-            background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05)) !important;
-            box-shadow: 0 0 0 4px var(--ok), 0 10px 40px rgba(34, 197, 94, 0.4) !important;
-            animation: foundPulse 0.8s ease-in-out 2;
-            position: relative;
-            z-index: 10;
-        }
-        @keyframes foundPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        .event-btn.found-match::before {
-            content: "🎯 FOUND! CLICK TO LAUNCH →";
-            position: absolute;
-            top: -32px; left: 50%; transform: translateX(-50%);
-            background: var(--ok); color: white; font-size: 11px;
-            padding: 5px 14px; border-radius: 20px; font-weight: 700;
-            white-space: nowrap; animation: slideDown 0.3s ease-out;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 20;
-        }
-        @keyframes slideDown { from { top: -40px; opacity: 0; } to { top: -32px; opacity: 1; } }
-        
-        .event-time {
-            min-width: 65px; font-weight: 700; color: #ff6b6b; font-size: 13px;
-            background: rgba(255, 107, 107, 0.2); padding: 5px 12px;
-            border-radius: 8px; text-align: center; flex-shrink: 0;
-        }
-        .event-btn:hover .event-time { color: white; background: rgba(255,255,255,0.25); }
-        
-        .event-info { flex: 1; min-width: 0; }
-        .event-title { font-weight: 600; font-size: 13px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .event-channel { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .event-btn:hover .event-channel { color: rgba(255,255,255,0.95); }
-        
-        .event-action { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        .launch-badge {
-            background: var(--ok); color: white; font-size: 11px; padding: 4px 10px;
-            border-radius: 6px; font-weight: 700; display: flex; align-items: center; gap: 4px;
-        }
-        .event-chevron { color: var(--muted); font-size: 16px; font-weight: bold; transition: transform 0.2s; }
-        .event-btn:hover .event-chevron { color: white; transform: translateX(3px); }
-        
-        /* Search helper bar */
-        .search-hint {
-            background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 8px; padding: 10px 15px; margin: 10px 0; font-size: 13px;
-            display: flex; align-items: center; gap: 8px; color: var(--muted);
-        }
-        .search-hint kbd {
-            background: #1e293b; padding: 2px 8px; border-radius: 4px; font-family: monospace; color: var(--text);
-        }
-        
-        /* No results */
+        /* No Results Message */
         .no-results {
-            text-align: center; padding: 25px; color: var(--muted); font-size: 14px;
-            background: rgba(239,68,68,0.1); border-radius: 8px; display: none; margin: 15px 0;
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 14px;
+            display: none;
         }
         .no-results.show { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Event Button Rows */
+        .events-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .event-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--card);
+            border: 1px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+            width: 100%;
+            gap: 12px;
+            font-size: 13px;
+        }
+        .event-btn:hover {
+            background: #e50914;
+            border-color: #e50914;
+            transform: translateY(-1px);
+        }
+        .event-btn:active { transform: scale(0.99); }
+        .event-btn.search-match {
+            border-color: var(--ok);
+            box-shadow: 0 0 0 2px var(--ok);
+        }
+        
+        .event-time {
+            min-width: 60px;
+            font-weight: bold;
+            color: #ff6b6b;
+            font-size: 12px;
+            background: rgba(255, 107, 107, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .event-btn:hover .event-time { color: white; background: rgba(255,255,255,0.2); }
+        
+        .event-info { flex: 1; min-width: 0; }
+        .event-title {
+            font-weight: 500;
+            font-size: 12px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .event-channel {
+            font-size: 11px;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.95;
+        }
+        .event-btn:hover .event-channel { color: rgba(255,255,255,0.9); }
+        
+        .event-action {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .event-chevron {
+            color: var(--muted);
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        .event-btn:hover .event-chevron {
+            color: white;
+            transform: translateX(2px);
+        }
+        .player-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
         
         /* ===== PLAYER UI ===== */
-        #playerUI { display: none; position: fixed; inset: 0; background: black; z-index: 9999; }
-        #streamFrame { width: 100%; height: 100%; border: none; }
+        #playerUI { 
+            display: none; 
+            position: fixed; 
+            inset: 0; 
+            background: black; 
+            z-index: 9999; 
+        }
+        #streamFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
         #exitBtn {
-            position: fixed; top: 20px; right: 20px; z-index: 10000;
-            background: rgba(229, 9, 20, 0.95); color: white; border: none;
-            padding: 12px 22px; border-radius: 8px; cursor: pointer; font-size: 14px;
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10000;
+            background: rgba(229, 9, 20, 0.95);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+            font-size: 13px;
         }
         #exitBtn:hover { background: rgba(229, 9, 20, 1); }
-        .hidden { display: none !important; }
-        
-        /* Match counter */
-        .match-counter {
-            text-align: center; font-size: 13px; color: var(--muted);
-            margin: 8px 0; min-height: 20px;
+        #currentStream {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: none;
+            font-family: monospace;
+            white-space: nowrap;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .match-counter.show { color: var(--ok); font-weight: 600; }
+        #playerSwitch {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 6px;
+            z-index: 10000;
+        }
+        .player-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.15s;
+        }
+        .player-btn:hover { background: #e50914; border-color: #e50914; }
+        .active-player { background: #e50914; border-color: #e50914; }
+        .hidden { display: none !important; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .empty-state svg { width: 60px; height: 60px; margin-bottom: 12px; opacity: 0.5; }
+        .section-nav-hint { font-size: 12px; color: var(--muted); text-align: center; margin-top: 4px; font-style: italic; }
     </style>
 </head>
 <body>
     <div class="wrap" id="mainUI">
         <h1>📺 Events Schedule - Time UK GMT</h1>
-        
         <div class="ctrl">
-            <input type="text" id="sectionSearch" class="search-box" placeholder="🔍 Type: hockey, tennis, wwe... then press ENTER">
+            <input type="text" id="sectionSearch" class="search-box" placeholder="🔍 Search sections or events: hockey, tennis, wwe...">
             <button id="btn" onclick="run()">🚀 Fetch Events</button>
-            <button class="btn-secondary" id="clearSearch" onclick="clearSearch()">✕ Clear</button>
+            <button class="btn-secondary" id="clearSearch" onclick="clearSectionSearch()" title="Clear search">✕</button>
         </div>
-        
-        <div class="search-hint">
-            <span>💡</span>
-            <span><strong>How to find & launch:</strong> Type a word → Press <kbd>Enter</kbd> → Page jumps to match → Click the glowing green button with <strong>"🎯 FOUND! CLICK TO LAUNCH"</strong></span>
-        </div>
-        
-        <div id="status">Click "🚀 Fetch Events" first, then type to search</div>
-        <div id="matchCounter" class="match-counter"></div>
-        <div id="noResults" class="no-results">🔍 No matches found for "<span id="searchTerm"></span>"<br><small>Try different keywords or fetch events first</small></div>
-        
+        <div class="section-nav-hint">💡 Type a keyword to find sections or events • Press <kbd>Enter</kbd> to search</div>
+        <div id="status">Click "Fetch Events" to load the schedule</div>
+        <div id="noResults" class="no-results">🔍 No sections or events match "<span id="searchTerm"></span>"</div>
         <div id="results"></div>
     </div>
 
     <div id="playerUI">
         <iframe id="streamFrame" allowfullscreen></iframe>
-        <button id="exitBtn" onclick="exitStream()">✕ Exit Player</button>
+        <button id="exitBtn" onclick="exitStream()">✕ Exit</button>
+        <span id="currentStream">Loading stream...</span>
+        <div id="playerSwitch"></div>
     </div>
 
     <script>
+        // ===== CONFIG =====
         const TARGET_URL = 'https://dlstreams.top';
-
+        
         // ✅ MAXIMUM COVERAGE PROXIES: 25+ endpoints with browser headers + fallback strategies
         const PROXIES = [
             // === TIER 1: Most Reliable (Tested Frequently) ===
@@ -217,256 +309,321 @@
             u => ({ url: `https://crossorigin.me/${encodeURIComponent(u)}`, opts: {} }),
         ];
 
+        // ===== PLAYER SWITCHING =====
+        let players = [], currentIndex = 0, currentLabel = "";
+        function getPlayers(id){
+            return [
+                `https://daddylive5.top/live/stream-${id}.php`,
+                `https://daddylive5.top/livemy/stream-${id}.php`, 
+                `https://dlstreams.top/stream/stream-${id}.php`,
+                `https://dlstreams.top/cast/stream-${id}.php`,
+                `https://dlstreams.top/watch/stream-${id}.php`,
+                `https://dlstreams.top/plus/stream-${id}.php`,
+                `https://dlstreams.top/casting/stream-${id}.php`,
+                `https://dlstreams.top/player/stream-${id}.php`
+            ];
+        }
+        function loadPlayer(i) {
+            currentIndex = i;
+            document.getElementById('streamFrame').src = players[i];
+            document.getElementById('currentStream').textContent = `${currentLabel} (Player ${i+1})`;
+            document.querySelectorAll('.player-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active-player', idx === i);
+            });
+        }
+        function renderSwitch() {
+            const switchBar = document.getElementById('playerSwitch');
+            switchBar.innerHTML = "";
+            players.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = `P${i+1}`;
+                btn.onclick = () => loadPlayer(i);
+                switchBar.appendChild(btn);
+            });
+        }
 
-        let allEvents = []; // Store all events for searching
+        // ===== SEARCH =====
+        const sectionSearchInput = document.getElementById('sectionSearch');
+        const noResultsEl = document.getElementById('noResults');
+        const searchTermEl = document.getElementById('searchTerm');
+        let allSections = [];
 
-        // ===== SEARCH - SIMPLE & RELIABLE =====
-        const searchInput = document.getElementById('sectionSearch');
-        const noResults = document.getElementById('noResults');
-        const matchCounter = document.getElementById('matchCounter');
-        
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                performSearch();
-            }
-            if (e.key === 'Escape') {
-                clearSearch();
-                searchInput.blur();
-            }
+        sectionSearchInput.addEventListener('input', debounce(handleSectionSearch, 150));
+        sectionSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); handleSectionSearch(); }
+            if (e.key === 'Escape') { clearSectionSearch(); sectionSearchInput.blur(); }
         });
-        
-        function performSearch() {
-            const query = searchInput.value.trim().toLowerCase();
-            document.getElementById('searchTerm').textContent = query;
-            noResults.classList.remove('show');
-            matchCounter.classList.remove('show');
-            
-            // Remove all previous highlights
-            document.querySelectorAll('.event-btn.found-match').forEach(btn => {
-                btn.classList.remove('found-match');
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+        function handleSectionSearch() {
+            const query = sectionSearchInput.value.trim().toLowerCase();
+            searchTermEl.textContent = query || '...';
+            noResultsEl.classList.remove('show');
+            document.querySelectorAll('.section-title').forEach(el => {
+                el.classList.remove('matched');
+                if (el.dataset.originalText) el.textContent = el.dataset.originalText;
             });
-            
-            if (!query || allEvents.length === 0) {
-                if (!query) matchCounter.textContent = '';
-                return;
-            }
-            
-            // Find matches
+            document.querySelectorAll('.event-btn.search-match').forEach(btn => btn.classList.remove('search-match'));
+            if (!query) { document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
             const matches = [];
-            document.querySelectorAll('.event-btn').forEach(btn => {
-                const title = (btn.querySelector('.event-title')?.textContent || '').toLowerCase();
-                const channel = (btn.querySelector('.event-channel')?.textContent || '').toLowerCase();
-                const time = (btn.querySelector('.event-time')?.textContent || '').toLowerCase();
-                
-                if (title.includes(query) || channel.includes(query) || time.includes(query)) {
-                    matches.push(btn);
+            allSections.forEach(section => {
+                const title = section.title.toLowerCase();
+                let sectionMatches = title.includes(query);
+                let matchedEventBtns = [];
+                const eventsContainer = section.element.querySelector('.events-container');
+                if (eventsContainer) {
+                    eventsContainer.querySelectorAll('.event-btn').forEach(btn => {
+                        const eventTitle = (btn.querySelector('.event-title')?.textContent || '').toLowerCase();
+                        const eventChannel = (btn.querySelector('.event-channel')?.textContent || '').toLowerCase();
+                        const eventTime = (btn.querySelector('.event-time')?.textContent || '').toLowerCase();
+                        if (eventTitle.includes(query) || eventChannel.includes(query) || eventTime.includes(query)) {
+                            sectionMatches = true;
+                            matchedEventBtns.push(btn);
+                        }
+                    });
                 }
+                if (sectionMatches) matches.push({ section, matchedEvents: matchedEventBtns });
             });
-            
-            if (matches.length === 0) {
-                noResults.classList.add('show');
-                matchCounter.textContent = `❌ 0 matches for "${query}"`;
-                return;
-            }
-            
-            // Highlight ALL matches
-            matches.forEach(btn => btn.classList.add('found-match'));
-            
-            // Show counter
-            matchCounter.textContent = `✅ Found ${matches.length} match${matches.length>1?'es':''} for "${query}"`;
-            matchCounter.classList.add('show');
-            
-            // 🎯 CRITICAL: Scroll to FIRST match with delay to ensure rendering
-            setTimeout(() => {
-                const firstMatch = matches[0];
-                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                
-                // Add extra visual pulse after scroll completes
-                setTimeout(() => {
-                    firstMatch.style.animation = 'none';
-                    setTimeout(() => {
-                        firstMatch.style.animation = 'foundPulse 0.8s ease-in-out 2';
-                    }, 10);
-                }, 600);
-            }, 100);
+            if (matches.length === 0) { noResultsEl.classList.add('show'); return; }
+            const firstMatch = matches[0];
+            const titleEl = firstMatch.section.element.querySelector('.section-title');
+            const originalTitle = titleEl.dataset.originalText || titleEl.textContent;
+            if (!titleEl.dataset.originalText) titleEl.dataset.originalText = originalTitle;
+            const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+            titleEl.innerHTML = originalTitle.replace(regex, '<span class="match-highlight">$1</span>');
+            firstMatch.matchedEvents.forEach(btn => btn.classList.add('search-match'));
+            titleEl.classList.add('matched');
+            requestAnimationFrame(() => titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+            // ✅ FIX: Removed the setTimeout that was clearing highlights after 3 seconds
+            // Now highlights persist until user clears search or types a new query
         }
-        
-        function clearSearch() {
-            searchInput.value = '';
-            document.querySelectorAll('.event-btn.found-match').forEach(btn => {
-                btn.classList.remove('found-match');
-            });
-            noResults.classList.remove('show');
-            matchCounter.textContent = '';
-            matchCounter.classList.remove('show');
-        }
+        function clearSectionSearch() { sectionSearchInput.value = ''; handleSectionSearch(); }
+        function escapeRegex(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-        // ===== FETCH & RENDER =====
+        // ===== CORE SCRAPING - IMPROVED =====
         async function run() {
             const btn = document.getElementById('btn');
             const resDiv = document.getElementById('results');
             btn.disabled = true;
             resDiv.innerHTML = '';
-            allEvents = [];
-            setStatus('⏳ Fetching events...');
+            allSections = [];
+            setStatus('⏳ Fetching events (retrying with browser headers)...');
 
             let html = null;
             for (let i = 0; i < PROXIES.length; i++) {
                 try {
-                    setStatus(`🔄 Proxy ${i+1}/${PROXIES.length}...`);
+                    setStatus(`🔄 Trying proxy ${i+1}/${PROXIES.length}...`);
                     const { url, opts } = PROXIES[i](TARGET_URL);
                     const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 15000);
+                    const timeout = setTimeout(() => controller.abort(), 12000);
                     
-                    const response = await fetch(url, { ...opts, signal: controller.signal, cache: 'no-store' });
+                    const response = await fetch(url, {
+                        ...opts,
+                        signal: controller.signal,
+                        cache: 'no-store'
+                    });
                     clearTimeout(timeout);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     html = await response.text();
-                    if (!html || html.length < 1000) throw new Error('Empty response');
-                    console.log(`✅ Proxy ${i+1} succeeded`);
+                    
+                    // Validate response has actual HTML content
+                    if (!html || !html.includes('<html') && !html.includes('<div') || html.length < 1000) {
+                        throw new Error('Invalid/empty response');
+                    }
+                    
+                    console.log(`✅ Proxy ${i+1} succeeded, got ${html.length} bytes`);
                     break;
+                    
                 } catch (e) {
                     console.warn(`❌ Proxy ${i+1} failed:`, e.message);
                     if (i === PROXIES.length - 1) {
-                        setStatus(`❌ All proxies failed. Try again later.`, 'err');
+                        setStatus(`❌ All proxies blocked. Site may have updated anti-bot measures.<br><small>Try again later or use a backend proxy.</small>`, 'err');
                         btn.disabled = false;
                         return;
                     }
-                    await new Promise(r => setTimeout(r, 1000));
+                    // Small delay before retry
+                    await new Promise(r => setTimeout(r, 800));
                 }
             }
 
-            setStatus('🔍 Parsing...');
+            setStatus('🔍 Parsing events...');
             try {
                 const doc = new DOMParser().parseFromString(html, 'text/html');
                 const categories = [];
                 
-                // Try multiple selectors
-                const catSelectors = ['div.schedule__category', 'div.category', '[data-category]'];
-                for (const sel of catSelectors) {
-                    const cats = doc.querySelectorAll(sel);
-                    if (cats.length) {
-                        cats.forEach(cat => parseCategory(cat, categories));
+                // Try multiple possible selectors for robustness
+                const categorySelectors = [
+                    'div.schedule__category.is-expanded',
+                    'div.category',
+                    'section.events',
+                    '[data-category]'
+                ];
+                
+                let foundCategories = false;
+                for (const selector of categorySelectors) {
+                    const cats = doc.querySelectorAll(selector);
+                    if (cats.length > 0) {
+                        cats.forEach(catEl => parseCategory(catEl, categories));
+                        foundCategories = true;
                         break;
                     }
                 }
                 
-                if (categories.length === 0 || categories.every(c => !c.events?.length)) {
-                    throw new Error('No events found - site may have changed');
+                if (!foundCategories) {
+                    // Fallback: try to find any event-like elements
+                    const events = doc.querySelectorAll('[class*="event"], [class*="match"], [class*="game"]');
+                    if (events.length > 0) {
+                        categories.push({ title: 'Events', events: [] });
+                        events.forEach(el => {
+                            const title = el.querySelector('[class*="title"]')?.innerText?.trim();
+                            if (title) categories[0].events.push({ title, time: 'N/A', channel: 'Unknown', url: '#' });
+                        });
+                    }
+                }
+
+                if (categories.length === 0 || categories.every(c => c.events.length === 0)) {
+                    // Debug: show first 500 chars of HTML to help diagnose
+                    console.log('🔍 HTML preview:', html.substring(0, 500));
+                    throw new Error('No events found - site structure may have changed');
                 }
                 
                 renderCategories(categories);
-                setStatus(`✅ Loaded ${allEvents.length} events. Type to search!`, 'ok');
                 
             } catch (e) {
-                setStatus(`❌ Error: ${e.message}`, 'err');
-                console.error(e);
+                setStatus(`❌ Parse failed: ${e.message}<br><small>Check console for HTML preview</small>`, 'err');
+                console.error('Parse error:', e);
+                console.log('📄 Response preview:', html?.substring(0, 800));
             } finally {
                 btn.disabled = false;
             }
         }
 
         function parseCategory(catEl, categories) {
-            const title = catEl.querySelector('.schedule__catHeader, .category-title, h2, h3')?.innerText.trim() || 'Events';
+            const catHeader = catEl.querySelector('.schedule__catHeader .card__meta, .category-title, h2, h3');
+            const categoryTitle = catHeader?.innerText.trim() || 'Events';
             const events = [];
             
-            const eventSelectors = ['div.schedule__event', '.event-item', '[data-event]'];
-            for (const sel of eventSelectors) {
-                catEl.querySelectorAll(sel).forEach(el => {
+            const eventSelectors = [
+                'div.schedule__event',
+                '.event-item',
+                '[data-event]',
+                'li.event'
+            ];
+            
+            for (const selector of eventSelectors) {
+                catEl.querySelectorAll(selector).forEach(el => {
                     try {
-                        const titleText = el.querySelector('.schedule__eventTitle, .event-title')?.innerText.trim();
-                        if (!titleText) return;
+                        const title = el.querySelector('.schedule__eventTitle, .event-title, .title')?.innerText.trim();
+                        if (!title) return;
+                        const tm = el.querySelector('.schedule__time, .time, [data-time]');
+                        const time = tm?.getAttribute('data-time') || tm?.innerText.trim() || 'N/A';
+                        const ch = el.querySelector('.schedule__channels, .channel, a[href]');
+                        if (!ch) return;
+                        const ln = ch.querySelector('a[href]') || ch;
+                        const href = ln.getAttribute('href');
+                        const channel = ln.getAttribute('title') || ln.innerText.trim() || 'Unknown';
                         
-                        const time = el.querySelector('.schedule__time, [data-time]')?.innerText.trim() || 'N/A';
-                        const link = el.querySelector('a[href]');
-                        const channel = link?.title || link?.innerText.trim() || 'Unknown';
-                        let href = link?.href || '#';
-                        
-                        // Extract channel ID for player URLs
+                        let finalUrl = href || '#';
                         let channelId = null;
-                        if (href.includes('id=')) {
-                            channelId = href.split('id=')[1].split('&')[0];
-                            href = `${TARGET_URL}/stream/stream-${channelId}.php`;
-                        } else if (href.startsWith('/')) {
-                            href = TARGET_URL + href;
+                        if (href?.includes('id=')) {
+                            channelId = href.split('id=')[1].split('&')[0].trim();
+                            finalUrl = `${TARGET_URL.replace(/\/+$/,'')}/stream/stream-${channelId}.php`;
+                        } else if (href && !href.startsWith('http')) {
+                            try { finalUrl = new URL(href, TARGET_URL).href; } catch {}
                         }
-                        
-                        events.push({ title: titleText, time, channel, url: href, channelId });
-                    } catch(e) {}
+                        events.push({title, time, channel, url: finalUrl, channelId, baseHref: href});
+                    } catch(e) { console.warn('Event parse error:', e); }
                 });
-                if (events.length) break;
+                if (events.length > 0) break;
             }
             
-            if (events.length) categories.push({ title, events });
+            if (events.length > 0) categories.push({ title: categoryTitle, events });
         }
 
         function renderCategories(categories) {
             const container = document.getElementById('results');
             container.innerHTML = '';
-            allEvents = [];
+            allSections = [];
             
-            categories.forEach(cat => {
+            if (categories.length === 0) {
+                container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg><p>No events found. The site structure may have changed.</p></div>`;
+                setStatus('✅ Loaded, but 0 events found', 'err');
+                return;
+            }
+            
+            let totalEvents = 0;
+            categories.forEach(cat => totalEvents += cat.events.length);
+            setStatus(`✅ Found ${totalEvents} events across ${categories.length} categories`, 'ok');
+            
+            categories.forEach(category => {
                 const section = document.createElement('div');
                 section.className = 'section';
+                section.dataset.sectionTitle = category.title.toLowerCase();
                 
                 const titleEl = document.createElement('div');
                 titleEl.className = 'section-title';
-                titleEl.textContent = cat.title;
+                titleEl.textContent = category.title;
+                titleEl.dataset.originalText = category.title;
                 section.appendChild(titleEl);
                 
-                const eventsDiv = document.createElement('div');
-                eventsDiv.className = 'events-container';
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'events-container';
                 
-                cat.events.forEach(ev => {
-                    allEvents.push(ev); // Store for search
+                category.events.forEach(ev => {
+                    const hasPlayers = ev.channelId && getPlayers(ev.channelId).length > 1;
                     const btn = document.createElement('button');
                     btn.className = 'event-btn';
                     btn.onclick = (e) => {
                         e.preventDefault();
-                        launchStream(ev);
+                        if (ev.channelId) {
+                            players = getPlayers(ev.channelId);
+                            currentIndex = 0;
+                            currentLabel = `${ev.title} • ${ev.channel}`;
+                            openPlayer(players[0]);
+                        } else if (ev.url) {
+                            players = [ev.url];
+                            currentIndex = 0;
+                            currentLabel = `${ev.title} • ${ev.channel}`;
+                            openPlayer(ev.url);
+                        }
                     };
-                    
-                    btn.innerHTML = `
-                        <span class="event-time">${esc(ev.time)}</span>
-                        <div class="event-info">
-                            <div class="event-title">${esc(ev.title)}</div>
-                            <div class="event-channel">📡 ${esc(ev.channel)}</div>
-                        </div>
-                        <div class="event-action">
-                            ${ev.channelId ? '<span class="launch-badge">▶ LAUNCH</span>' : ''}
-                            <i class="event-chevron">›</i>
-                        </div>
-                    `;
-                    eventsDiv.appendChild(btn);
+                    btn.innerHTML = `<span class="event-time">${esc(ev.time)}</span><div class="event-info"><div class="event-title">${esc(ev.title)}</div><div class="event-channel">📡 ${esc(ev.channel)}</div></div><div class="event-action">${hasPlayers ? `<span class="player-badge">▶ P1</span>` : ''}<i class="event-chevron" aria-hidden="true">›</i></div>`;
+                    eventsContainer.appendChild(btn);
                 });
                 
-                section.appendChild(eventsDiv);
+                section.appendChild(eventsContainer);
                 container.appendChild(section);
+                allSections.push({ title: category.title, element: section });
             });
             
-            // Re-apply search if there's a query
-            if (searchInput.value.trim()) performSearch();
+            if (sectionSearchInput.value.trim()) handleSectionSearch();
         }
 
-        // ===== STREAM LAUNCH =====
-        function launchStream(ev) {
+        // ===== STREAM LAUNCHING =====
+        function openPlayer(url) {
             document.getElementById('mainUI').classList.add('hidden');
             document.getElementById('playerUI').style.display = 'block';
             document.getElementById('exitBtn').style.display = 'block';
-            
-            const url = ev.channelId 
-                ? `https://daddylive5.top/live/stream-${ev.channelId}.php`
-                : ev.url;
-            document.getElementById('streamFrame').src = url;
+            document.getElementById('playerSwitch').style.display = 'flex';
+            document.getElementById('currentStream').style.display = 'block';
+            loadPlayer(0);
+            renderSwitch();
         }
-        
         function exitStream() {
             document.getElementById('playerUI').style.display = 'none';
             document.getElementById('exitBtn').style.display = 'none';
+            document.getElementById('playerSwitch').style.display = 'none';
+            document.getElementById('currentStream').style.display = 'none';
             document.getElementById('mainUI').classList.remove('hidden');
-            document.getElementById('streamFrame').src = '';
+            document.getElementById('streamFrame').src = "";
+            players = []; currentIndex = 0; currentLabel = "";
         }
 
         // ===== UTILS =====
@@ -475,16 +632,23 @@
             el.innerHTML = msg;
             el.className = type || '';
         }
-        function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-        
-        // Keyboard shortcut: Ctrl+K to focus search
+        function esc(s) { if(!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (document.getElementById('playerUI').style.display === 'block') exitStream();
+                else if (document.activeElement === sectionSearchInput) { clearSectionSearch(); sectionSearchInput.blur(); }
+            }
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
-                searchInput.focus();
-                searchInput.select();
+                sectionSearchInput.focus();
+                sectionSearchInput.select();
             }
         });
+
+        // Auto-fetch on load (optional - comment out if unwanted)
+        // window.addEventListener('load', () => setTimeout(run, 500));
     </script>
 </body>
 </html>
