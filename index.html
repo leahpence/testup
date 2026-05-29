@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -311,18 +313,20 @@
 
         // ===== PLAYER SWITCHING =====
         let players = [], currentIndex = 0, currentLabel = "";
-        function getPlayers(id){
-            return [
-                `https://daddylive5.top/live/stream-${id}.php`,
-                `https://daddylive5.top/livemy/stream-${id}.php`, 
-                `https://dlstreams.top/stream/stream-${id}.php`,
-                `https://dlstreams.top/cast/stream-${id}.php`,
-                `https://dlstreams.top/watch/stream-${id}.php`,
-                `https://dlstreams.top/plus/stream-${id}.php`,
-                `https://dlstreams.top/casting/stream-${id}.php`,
-                `https://dlstreams.top/player/stream-${id}.php`
-            ];
+
+
+        function getPlayers(id) {
+        return [
+            `https://daddylive1.link/my/stream-${id}.php`,   
+            `https://dlhd.pk/stream/stream-${id}.php`,
+            `https://dlhd.pk/cast/stream-${id}.php`,
+            `https://dlhd.pk/watch/stream-${id}.php`,
+            `https://dlhd.pk/plus/stream-${id}.php`,
+            `https://dlhd.pk/casting/stream-${id}.php`,
+            `https://dlhd.pk/player/stream-${id}.php`,
+        ];
         }
+
         function loadPlayer(i) {
             currentIndex = i;
             document.getElementById('streamFrame').src = players[i];
