@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,23 +11,10 @@
         body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; scroll-behavior: smooth; }
         .wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
         h1 { text-align: center; margin: 0 0 20px; font-weight: 600; }
-        
-        /* Controls */
         .ctrl { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-        .search-box {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px 15px;
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 25px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
+        .search-box { flex: 1; min-width: 200px; padding: 10px 15px; background: #1a1a1a; border: 1px solid #444; border-radius: 25px; color: white; font-size: 14px; outline: none; }
         .search-box:focus { border-color: var(--accent); }
         .search-box::placeholder { color: var(--muted); }
-        
         button { padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.15s; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:disabled { opacity: 0.4; cursor: wait; transform: none; }
@@ -36,205 +22,41 @@
         .btn-danger { background: var(--err); }
         .btn-secondary { background: #334155; }
         .btn-secondary:hover { background: #475569; }
-        
-        /* Status */
         #status { text-align: center; padding: 12px; margin: 10px 0; border-radius: 6px; background: #1e293b; color: var(--muted); min-height: 20px; font-size: 14px; }
         .err { background: rgba(239,68,68,0.15); color: var(--err); border: 1px solid rgba(239,68,68,0.3); }
         .ok { background: rgba(34,197,94,0.15); color: var(--ok); border: 1px solid rgba(34,197,94,0.3); }
-        
-        /* Section Headers */
         .section { margin-bottom: 24px; scroll-margin-top: 100px; }
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            padding: 12px 16px;
-            margin: 20px 0 10px;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border-left: 4px solid var(--accent);
-            border-radius: 0 8px 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+        .section-title { font-size: 18px; font-weight: 600; padding: 12px 16px; margin: 20px 0 10px; background: linear-gradient(135deg, #1e293b, #0f172a); border-left: 4px solid var(--accent); border-radius: 0 8px 8px 0; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
         .section-title::before { content: "📅"; font-size: 16px; }
         .section-title:hover { background: linear-gradient(135deg, #263345, #151e2e); border-left-color: #60a5fa; }
-        .section-title.matched {
-            border-left-color: var(--ok);
-            box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25);
-            animation: pulse 1.5s ease-in-out;
-        }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25); }
-            50% { box-shadow: 0 0 0 4px var(--ok), 0 6px 28px rgba(34, 197, 94, 0.4); }
-        }
-        .section-title .match-highlight {
-            background: rgba(34, 197, 94, 0.25);
-            padding: 0 4px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-        
-        /* No Results Message */
-        .no-results {
-            text-align: center;
-            padding: 20px;
-            color: var(--muted);
-            font-size: 14px;
-            display: none;
-        }
+        .section-title.matched { border-left-color: var(--ok); box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25); animation: pulse 1.5s ease-in-out; }
+        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 2px var(--ok), 0 4px 20px rgba(34, 197, 94, 0.25); } 50% { box-shadow: 0 0 0 4px var(--ok), 0 6px 28px rgba(34, 197, 94, 0.4); } }
+        .section-title .match-highlight { background: rgba(34, 197, 94, 0.25); padding: 0 4px; border-radius: 3px; font-weight: 700; }
+        .no-results { text-align: center; padding: 20px; color: var(--muted); font-size: 14px; display: none; }
         .no-results.show { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Event Button Rows */
         .events-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-        .event-btn {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 12px;
-            background: var(--card);
-            border: 1px solid #333;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s;
-            text-align: left;
-            width: 100%;
-            gap: 12px;
-            font-size: 13px;
-        }
-        .event-btn:hover {
-            background: #e50914;
-            border-color: #e50914;
-            transform: translateY(-1px);
-        }
+        .event-btn { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--card); border: 1px solid #333; border-radius: 6px; cursor: pointer; transition: all 0.15s; text-align: left; width: 100%; gap: 12px; font-size: 13px; }
+        .event-btn:hover { background: #e50914; border-color: #e50914; transform: translateY(-1px); }
         .event-btn:active { transform: scale(0.99); }
-        .event-btn.search-match {
-            border-color: var(--ok);
-            box-shadow: 0 0 0 2px var(--ok);
-        }
-        
-        .event-time {
-            min-width: 60px;
-            font-weight: bold;
-            color: #ff6b6b;
-            font-size: 12px;
-            background: rgba(255, 107, 107, 0.15);
-            padding: 4px 10px;
-            border-radius: 6px;
-            text-align: center;
-            flex-shrink: 0;
-        }
+        .event-btn.search-match { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok); }
+        .event-time { min-width: 60px; font-weight: bold; color: #ff6b6b; font-size: 12px; background: rgba(255, 107, 107, 0.15); padding: 4px 10px; border-radius: 6px; text-align: center; flex-shrink: 0; }
         .event-btn:hover .event-time { color: white; background: rgba(255,255,255,0.2); }
-        
         .event-info { flex: 1; min-width: 0; }
-        .event-title {
-            font-weight: 500;
-            font-size: 12px;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .event-channel {
-            font-size: 11px;
-            color: var(--muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            opacity: 0.95;
-        }
+        .event-title { font-weight: 500; font-size: 12px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .event-channel { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.95; }
         .event-btn:hover .event-channel { color: rgba(255,255,255,0.9); }
-        
-        .event-action {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .event-chevron {
-            color: var(--muted);
-            font-size: 14px;
-            transition: transform 0.2s;
-        }
-        .event-btn:hover .event-chevron {
-            color: white;
-            transform: translateX(2px);
-        }
-        .player-badge {
-            background: var(--accent);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        
-        /* ===== PLAYER UI ===== */
-        #playerUI { 
-            display: none; 
-            position: fixed; 
-            inset: 0; 
-            background: black; 
-            z-index: 9999; 
-        }
-        #streamFrame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        #exitBtn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            z-index: 10000;
-            background: rgba(229, 9, 20, 0.95);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            display: none;
-            font-size: 13px;
-        }
+        .event-action { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .event-chevron { color: var(--muted); font-size: 14px; transition: transform 0.2s; }
+        .event-btn:hover .event-chevron { color: white; transform: translateX(2px); }
+        .player-badge { background: var(--accent); color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        #playerUI { display: none; position: fixed; inset: 0; background: black; z-index: 9999; }
+        #streamFrame { width: 100%; height: 100%; border: none; }
+        #exitBtn { position: fixed; top: 15px; right: 15px; z-index: 10000; background: rgba(229, 9, 20, 0.95); color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; display: none; font-size: 13px; }
         #exitBtn:hover { background: rgba(229, 9, 20, 1); }
-        #currentStream {
-            position: fixed;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            background: rgba(30, 30, 30, 0.95);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            display: none;
-            font-family: monospace;
-            white-space: nowrap;
-            max-width: 90%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #playerSwitch {
-            position: fixed;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            gap: 6px;
-            z-index: 10000;
-        }
-        .player-btn {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: 0.15s;
-        }
+        #currentStream { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); z-index: 10000; background: rgba(30, 30, 30, 0.95); padding: 8px 16px; border-radius: 20px; font-size: 11px; display: none; font-family: monospace; white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+        #playerSwitch { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); display: none; gap: 6px; z-index: 10000; }
+        .player-btn { background: #1a1a1a; border: 1px solid #333; color: white; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: 0.15s; }
         .player-btn:hover { background: #e50914; border-color: #e50914; }
         .active-player { background: #e50914; border-color: #e50914; }
         .hidden { display: none !important; }
@@ -266,66 +88,29 @@
 
     <script>
         // ===== CONFIG =====
-        const TARGET_URL = 'https://dlstreams.top';
-        
-        // ✅ MAXIMUM COVERAGE PROXIES: 25+ endpoints with browser headers + fallback strategies
-        const PROXIES = [
-            // === TIER 1: Most Reliable (Tested Frequently) ===
-            u => ({ url: `https://corsproxy.io/?${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } } }),
-            u => ({ url: `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0' } } }),
-            u => ({ url: `https://proxy.cors.sh/${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0', 'x-cors-api-key': 'temp_abc123' } } }),
-            u => ({ url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, opts: {} }),
-            
-            // === TIER 2: High Success Rate ===
-            u => ({ url: `https://api.cors.dev/${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0' } } }),
-            u => ({ url: `https://cors.bridged.cc/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0' } } }),
-            u => ({ url: `https://proxy.letscorp.net/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://cors-proxy.htmldriven.com/?url=${encodeURIComponent(u)}`, opts: {} }),
-            
-            // === TIER 3: Community/Worker Proxies ===
-            u => ({ url: `https://proxy.hydrophobic.workers.dev/?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://cors.workers.dev/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy-https.cors.workers.dev/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy.deno-oss.com/?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy-ssl.deno.dev/?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy.johanw.xyz/?url=${encodeURIComponent(u)}`, opts: {} }),
-            
-            // === TIER 4: Heroku/Cloud Functions (May Sleep) ===
-            u => ({ url: `https://cors-anywhere.herokuapp.com/${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0', 'Origin': 'https://localhost' } } }),
-            u => ({ url: `https://free-cors-proxy.herokuapp.com/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://cors-proxy-server.herokuapp.com/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://node-cors-proxy.herokuapp.com/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://cors-proxy-node.herokuapp.com/${encodeURIComponent(u)}`, opts: {} }),
-            
-            // === TIER 5: JSON Wrapper Fallbacks (Parse response.text) ===
-            u => ({ url: `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'Mozilla/5.0' } } }),
-            u => ({ url: `https://www.corstest.com/proxy.php?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://cors-proxy.webserv.eu/?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy.consumet.org/${encodeURIComponent(u)}`, opts: {} }),
-            
-            // === TIER 6: Last Resort / Experimental ===
-            u => ({ url: `https://api.corsproxy.io/v1/fetch?url=${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://proxy.getpostman.com/${encodeURIComponent(u)}`, opts: { headers: { 'User-Agent': 'PostmanRuntime/7.32.3' } } }),
-            u => ({ url: `https://cors.isomorphic-git.org/${encodeURIComponent(u)}`, opts: {} }),
-            u => ({ url: `https://crossorigin.me/${encodeURIComponent(u)}`, opts: {} }),
-        ];
+        const API_URL = 'https://daddylive.eu/api/events';
+
+        // ===== 🔥 YOUR PLAYER FUNCTION - PRESERVED EXACTLY =====
+        function getPlayers(id) {
+            return [
+                `https://daddylive1.link/my/stream-${id}.php`,   
+                `https://dlhd.pk/stream/stream-${id}.php`,
+                `https://dlhd.pk/cast/stream-${id}.php`,
+                `https://dlhd.pk/watch/stream-${id}.php`,
+                `https://dlhd.pk/plus/stream-${id}.php`,
+                `https://dlhd.pk/casting/stream-${id}.php`,
+                `https://dlhd.pk/player/stream-${id}.php`,
+            ];
+        }
+
+        // ===== 🔢 CHECK IF ID IS PURE NUMERIC =====
+        function isNumericId(str) {
+            if (!str) return false;
+            return /^\d+$/.test(str.toString().trim());
+        }
 
         // ===== PLAYER SWITCHING =====
         let players = [], currentIndex = 0, currentLabel = "";
-
-
-        function getPlayers(id) {
-        return [
-            `https://daddylive1.link/my/stream-${id}.php`,   
-            `https://dlhd.pk/stream/stream-${id}.php`,
-            `https://dlhd.pk/cast/stream-${id}.php`,
-            `https://dlhd.pk/watch/stream-${id}.php`,
-            `https://dlhd.pk/plus/stream-${id}.php`,
-            `https://dlhd.pk/casting/stream-${id}.php`,
-            `https://dlhd.pk/player/stream-${id}.php`,
-        ];
-        }
 
         function loadPlayer(i) {
             currentIndex = i;
@@ -404,167 +189,95 @@
             firstMatch.matchedEvents.forEach(btn => btn.classList.add('search-match'));
             titleEl.classList.add('matched');
             requestAnimationFrame(() => titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-            // ✅ FIX: Removed the setTimeout that was clearing highlights after 3 seconds
-            // Now highlights persist until user clears search or types a new query
         }
         function clearSectionSearch() { sectionSearchInput.value = ''; handleSectionSearch(); }
         function escapeRegex(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
-        // ===== CORE SCRAPING - IMPROVED =====
+        // ===== CORE API FETCH =====
         async function run() {
             const btn = document.getElementById('btn');
             const resDiv = document.getElementById('results');
             btn.disabled = true;
             resDiv.innerHTML = '';
             allSections = [];
-            setStatus('⏳ Fetching events (retrying with browser headers)...');
+            setStatus('⏳ Fetching events from API...');
 
-            let html = null;
-            for (let i = 0; i < PROXIES.length; i++) {
-                try {
-                    setStatus(`🔄 Trying proxy ${i+1}/${PROXIES.length}...`);
-                    const { url, opts } = PROXIES[i](TARGET_URL);
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 12000);
-                    
-                    const response = await fetch(url, {
-                        ...opts,
-                        signal: controller.signal,
-                        cache: 'no-store'
-                    });
-                    clearTimeout(timeout);
-                    
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    html = await response.text();
-                    
-                    // Validate response has actual HTML content
-                    if (!html || !html.includes('<html') && !html.includes('<div') || html.length < 1000) {
-                        throw new Error('Invalid/empty response');
-                    }
-                    
-                    console.log(`✅ Proxy ${i+1} succeeded, got ${html.length} bytes`);
-                    break;
-                    
-                } catch (e) {
-                    console.warn(`❌ Proxy ${i+1} failed:`, e.message);
-                    if (i === PROXIES.length - 1) {
-                        setStatus(`❌ All proxies blocked. Site may have updated anti-bot measures.<br><small>Try again later or use a backend proxy.</small>`, 'err');
-                        btn.disabled = false;
-                        return;
-                    }
-                    // Small delay before retry
-                    await new Promise(r => setTimeout(r, 800));
-                }
-            }
-
-            setStatus('🔍 Parsing events...');
             try {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const categories = [];
+                const response = await fetch(API_URL, {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                });
                 
-                // Try multiple possible selectors for robustness
-                const categorySelectors = [
-                    'div.schedule__category.is-expanded',
-                    'div.category',
-                    'section.events',
-                    '[data-category]'
-                ];
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
                 
-                let foundCategories = false;
-                for (const selector of categorySelectors) {
-                    const cats = doc.querySelectorAll(selector);
-                    if (cats.length > 0) {
-                        cats.forEach(catEl => parseCategory(catEl, categories));
-                        foundCategories = true;
-                        break;
-                    }
-                }
-                
-                if (!foundCategories) {
-                    // Fallback: try to find any event-like elements
-                    const events = doc.querySelectorAll('[class*="event"], [class*="match"], [class*="game"]');
-                    if (events.length > 0) {
-                        categories.push({ title: 'Events', events: [] });
-                        events.forEach(el => {
-                            const title = el.querySelector('[class*="title"]')?.innerText?.trim();
-                            if (title) categories[0].events.push({ title, time: 'N/A', channel: 'Unknown', url: '#' });
-                        });
-                    }
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    throw new Error('Invalid API response');
                 }
 
+                setStatus('🔍 Parsing events...');
+                const categories = parseAPIResponse(data[0]);
+                
                 if (categories.length === 0 || categories.every(c => c.events.length === 0)) {
-                    // Debug: show first 500 chars of HTML to help diagnose
-                    console.log('🔍 HTML preview:', html.substring(0, 500));
-                    throw new Error('No events found - site structure may have changed');
+                    throw new Error('No events found in API response');
                 }
                 
                 renderCategories(categories);
+                setStatus(`✅ Found ${categories.reduce((sum, c) => sum + c.events.length, 0)} events across ${categories.length} categories`, 'ok');
                 
             } catch (e) {
-                setStatus(`❌ Parse failed: ${e.message}<br><small>Check console for HTML preview</small>`, 'err');
-                console.error('Parse error:', e);
-                console.log('📄 Response preview:', html?.substring(0, 800));
+                setStatus(`❌ Error: ${e.message}<br><small>${e.stack || ''}</small>`, 'err');
+                console.error('Fetch/Parse error:', e);
             } finally {
                 btn.disabled = false;
             }
         }
 
-        function parseCategory(catEl, categories) {
-            const catHeader = catEl.querySelector('.schedule__catHeader .card__meta, .category-title, h2, h3');
-            const categoryTitle = catHeader?.innerText.trim() || 'Events';
-            const events = [];
+        // ===== PARSE API — Extract channel info =====
+        function parseAPIResponse(data) {
+            const categories = [];
+            const { categories: cats } = data;
             
-            const eventSelectors = [
-                'div.schedule__event',
-                '.event-item',
-                '[data-event]',
-                'li.event'
-            ];
+            if (!cats) return categories;
             
-            for (const selector of eventSelectors) {
-                catEl.querySelectorAll(selector).forEach(el => {
-                    try {
-                        const title = el.querySelector('.schedule__eventTitle, .event-title, .title')?.innerText.trim();
-                        if (!title) return;
-                        const tm = el.querySelector('.schedule__time, .time, [data-time]');
-                        const time = tm?.getAttribute('data-time') || tm?.innerText.trim() || 'N/A';
-                        const ch = el.querySelector('.schedule__channels, .channel, a[href]');
-                        if (!ch) return;
-                        const ln = ch.querySelector('a[href]') || ch;
-                        const href = ln.getAttribute('href');
-                        const channel = ln.getAttribute('title') || ln.innerText.trim() || 'Unknown';
-                        
-                        let finalUrl = href || '#';
-                        let channelId = null;
-                        if (href?.includes('id=')) {
-                            channelId = href.split('id=')[1].split('&')[0].trim();
-                            finalUrl = `${TARGET_URL.replace(/\/+$/,'')}/stream/stream-${channelId}.php`;
-                        } else if (href && !href.startsWith('http')) {
-                            try { finalUrl = new URL(href, TARGET_URL).href; } catch {}
-                        }
-                        events.push({title, time, channel, url: finalUrl, channelId, baseHref: href});
-                    } catch(e) { console.warn('Event parse error:', e); }
-                });
-                if (events.length > 0) break;
+            for (const [categoryName, events] of Object.entries(cats)) {
+                if (!Array.isArray(events) || events.length === 0) continue;
+                
+                const parsedEvents = events.map(ev => {
+                    if (!ev.channels || ev.channels.length === 0) return null;
+                    
+                    const firstChannel = ev.channels[0];
+                    const rawChannelId = firstChannel.channel_id?.toString()?.trim() || null;
+                    const embedUrl = firstChannel.url || null;
+                    
+                    return {
+                        title: ev.event || 'Unknown Event',
+                        time: ev.time || 'N/A',
+                        channelName: firstChannel.channel_name || 'Unknown',
+                        channelId: rawChannelId,    // Raw ID from API
+                        embedUrl: embedUrl,          // Direct embed URL fallback
+                        channels: ev.channels
+                    };
+                }).filter(e => e !== null);
+                
+                if (parsedEvents.length > 0) {
+                    categories.push({ title: categoryName, events: parsedEvents });
+                }
             }
             
-            if (events.length > 0) categories.push({ title: categoryTitle, events });
+            return categories;
         }
 
+        // ===== RENDER — Hybrid: numeric ID → getPlayers(), else → embed URL =====
         function renderCategories(categories) {
             const container = document.getElementById('results');
             container.innerHTML = '';
             allSections = [];
             
             if (categories.length === 0) {
-                container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg><p>No events found. The site structure may have changed.</p></div>`;
-                setStatus('✅ Loaded, but 0 events found', 'err');
+                container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg><p>No events found.</p></div>`;
                 return;
             }
-            
-            let totalEvents = 0;
-            categories.forEach(cat => totalEvents += cat.events.length);
-            setStatus(`✅ Found ${totalEvents} events across ${categories.length} categories`, 'ok');
             
             categories.forEach(category => {
                 const section = document.createElement('div');
@@ -581,24 +294,55 @@
                 eventsContainer.className = 'events-container';
                 
                 category.events.forEach(ev => {
-                    const hasPlayers = ev.channelId && getPlayers(ev.channelId).length > 1;
+                    // 🔥 HYBRID PLAYER URL GENERATION
+                    let playerUrls = [];
+                    let displayId = ev.channelId || 'N/A';
+                    let idType = 'unknown';
+                    
+                    if (isNumericId(ev.channelId)) {
+                        // ✅ Numeric ID → use your getPlayers() system
+                        playerUrls = getPlayers(ev.channelId);
+                        displayId = ev.channelId;
+                        idType = 'numeric';
+                    } else if (ev.embedUrl) {
+                        // ⚠️ Complex ID → fallback to direct embed URL
+                        playerUrls = [ev.embedUrl];
+                        displayId = ev.channelName;
+                        idType = 'embed';
+                    }
+                    
+                    const hasMultiple = playerUrls.length > 1;
+                    
+                    // Display format: "31 - TNT Sports 1 UK" OR "[embed] Link - 1"
+                    const displayChannel = idType === 'numeric' 
+                        ? `${displayId} - ${ev.channelName}`
+                        : `${ev.channelName}`;
+                    
                     const btn = document.createElement('button');
                     btn.className = 'event-btn';
                     btn.onclick = (e) => {
                         e.preventDefault();
-                        if (ev.channelId) {
-                            players = getPlayers(ev.channelId);
+                        if (playerUrls.length > 0) {
+                            players = playerUrls;
                             currentIndex = 0;
-                            currentLabel = `${ev.title} • ${ev.channel}`;
+                            // Show which method is being used
+                            const idTag = idType === 'numeric' ? displayId : `[${idType}]`;
+                            currentLabel = `${idTag} - ${ev.title} • ${ev.channelName}`;
+
                             openPlayer(players[0]);
-                        } else if (ev.url) {
-                            players = [ev.url];
-                            currentIndex = 0;
-                            currentLabel = `${ev.title} • ${ev.channel}`;
-                            openPlayer(ev.url);
                         }
                     };
-                    btn.innerHTML = `<span class="event-time">${esc(ev.time)}</span><div class="event-info"><div class="event-title">${esc(ev.title)}</div><div class="event-channel">📡 ${esc(ev.channel)}</div></div><div class="event-action">${hasPlayers ? `<span class="player-badge">▶ P1</span>` : ''}<i class="event-chevron" aria-hidden="true">›</i></div>`;
+                    btn.innerHTML = `
+                        <span class="event-time">${esc(ev.time)}</span>
+                        <div class="event-info">
+                            <div class="event-title">${esc(ev.title)}</div>
+                            <div class="event-channel">📡 ${esc(displayChannel)}</div>
+                        </div>
+                        <div class="event-action">
+                            ${hasMultiple ? `<span class="player-badge">▶ ${playerUrls.length}</span>` : ''}
+                            <i class="event-chevron" aria-hidden="true">›</i>
+                        </div>
+                    `;
                     eventsContainer.appendChild(btn);
                 });
                 
@@ -651,7 +395,7 @@
             }
         });
 
-        // Auto-fetch on load (optional - comment out if unwanted)
+        // Auto-fetch on load (optional - uncomment if desired)
         // window.addEventListener('load', () => setTimeout(run, 500));
     </script>
 </body>
