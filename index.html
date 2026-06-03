@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -261,7 +260,7 @@
     <!-- Header -->
     <header class="header">
         <div class="nav">
-            <a class="brand" href="/">Fer & DJ live tv</a>
+            <a class="brand" href="/">Fer & DJ live events</a>
         </div>
     </header>
 
@@ -286,7 +285,7 @@
         <iframe id="streamFrame" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>
         <button id="exitBtn" onclick="exitStream()">✕ Exit Player</button>
         <span id="currentStream">Loading stream...</span>
-        <div id="playerSwitch"></div
+        <div id="playerSwitch"></div>
     </div>
 
     <script>
@@ -410,35 +409,86 @@
         let allData2 = {};
         let selectedTopCategory = 'All';
 
+
         async function fetchAndRenderSchedule() {
             const scheduleContainer = document.getElementById('schedule-container');
+
             try {
-                const response1 = await fetch(PROXY + encodeURIComponent(TARGET_URL_TV));
-                if (!response1.ok) throw new Error(`tv.json HTTP error! status: ${response1.status}`);
+                console.time('TOTAL');
+
+                // -------------------------
+                // TV.JSON
+                // -------------------------
+                console.time('TV');
+
+                const response1 = await fetch(
+                    PROXY + encodeURIComponent(TARGET_URL_TV)
+                );
+
+                console.timeEnd('TV');
+
+                if (!response1.ok) {
+                    throw new Error(`tv.json HTTP error! status: ${response1.status}`);
+                }
+
                 allData = await response1.json();
-                
+
+                console.log('TV DATA:', allData);
+                console.log('TV DATES:', Object.keys(allData ?? {}));
+
+                // -------------------------
+                // TV2.JSON (optional) >>>>>>>  Need to scrap only "time" and "event"  no "channels" (this is "Live Events" section)
+                // -------------------------
+                console.time('TV2');
+
                 try {
-                    const response2 = await fetch(PROXY + encodeURIComponent(TARGET_URL_TV2));
+                    const response2 = await fetch(
+                        PROXY + encodeURIComponent(TARGET_URL_TV2)
+                    );
+
+                    console.timeEnd('TV2');
+
                     if (response2.ok) {
                         allData2 = await response2.json();
+
+                        console.log('TV2 DATA:', allData2);
+                        console.log('TV2 DATES:', Object.keys(allData2 ?? {}));
+
+                    } else {
+                        console.warn('TV2 returned:', response2.status);
+                        allData2 = {};
                     }
+
                 } catch (e) {
-                    console.warn('tv2.json not available, continuing with tv.json only');
+                    console.timeEnd('TV2');
+                    console.warn('tv2.json unavailable:', e.message);
                     allData2 = {};
                 }
+
+                // -------------------------
+                // RENDER
+                // -------------------------
                 
+                console.time('RENDER');
+
                 const topcategories = extractTopCategories(allData, allData2);
+
                 renderTopCategoryFilter(topcategories);
+
+                // IMPORTANT: renderSchedule must NOT use inline onclick anymore
                 renderSchedule(allData, allData2, 'All');
-                
+
+                console.timeEnd('RENDER');                
+
             } catch (error) {
                 console.error('❌ Critical Error fetching data:', error);
+
                 scheduleContainer.innerHTML = `
-                    <p style="color: red; text-align: center; padding: 20px;">
+                    <p style="color:red;text-align:center;padding:20px;">
                         Failed to load schedule data from daddylive.eu.<br>
-                        Error: ${error.message}<br>
-                        <small>This might be due to CORS restrictions, network issues, or the target site being temporarily unavailable.</small>
-                    </p>`;
+                        Error: ${error.message}
+                    </p>
+                `;
             }
         }
 
@@ -502,92 +552,131 @@
             const eventElement = document.createElement('div');
             eventElement.classList.add('event');
             eventElement.setAttribute('data-event', event.event);
+
             let eventSearchData = event.event.toLowerCase();
+
             const safeEventName = esc(event.event);
 
-            const channelsHTML = Array.isArray(event.channels) ? event.channels.map(channel => {
-                eventSearchData += ` ${channel.channel_name.toLowerCase()}`;
-                const safeChannelName = esc(channel.channel_name);
-                const safeChannelId = channel.channel_id;
-                
-                return `
-                    <div class="channel-item" data-channel="${channel.channel_name.toLowerCase()}" data-channel-id="${safeChannelId}">
-                        <a href="#" onclick="handleChannelClick(event, '${safeChannelId}', '${safeChannelName}', '${safeEventName}', null); return false;">
-                            <span style="font-weight: 600;">${safeChannelName}</span>
-                            <span class="channel-id-badge">ID: ${safeChannelId}</span>
-                        </a>
-                    </div>
-                `;
-            }).join('') : '';
+            const channelsHTML = Array.isArray(event.channels)
+                ? event.channels.map(channel => {
+
+                    eventSearchData += ` ${channel.channel_name.toLowerCase()}`;
+
+                    const safeChannelName = esc(channel.channel_name);
+                    const safeChannelId = channel.channel_id;
+
+                    return `
+                        <div class="channel-item"
+                            data-channel="${channel.channel_name.toLowerCase()}"
+                            data-channel-id="${safeChannelId}">
+
+                            <a href="#"
+                            class="channel-link"
+                            data-channel-id="${safeChannelId}"
+                            data-channel-name="${safeChannelName}"
+                            data-event-name="${safeEventName}"
+                            data-direct-url="">
+
+                                <span style="font-weight: 600;">${safeChannelName}</span>
+                                <span class="channel-id-badge">ID: ${safeChannelId}</span>
+
+                            </a>
+
+                        </div>
+                    `;
+                }).join('')
+                : '';
 
             eventElement.setAttribute('data-search-content', eventSearchData.trim());
+
             eventElement.innerHTML = `
                 <div class="event-content">
                     <div class="event-time">${event.time}</div>
                     <div class="event-description">${safeEventName}</div>
                 </div>
+
                 <div class="channel-list">
                     ${channelsHTML || '<p style="padding: 10px; color: #999; width: 100%; text-align: center;">No channels available</p>'}
                 </div>
             `;
 
+            // toggle open/close
             eventElement.onclick = (e) => {
-                if (e.target.closest('.channel-item')) return;
+                if (e.target.closest('.channel-link')) return;
+
                 const channelList = eventElement.querySelector('.channel-list');
                 channelList.classList.toggle('show');
             };
+
             return eventElement;
         }
+
 
         function createEventElementTV2(event) {
             const eventElement = document.createElement('div');
             eventElement.classList.add('event', 'event-tv2');
             eventElement.setAttribute('data-event', event.event);
+
             let playersHTML = '';
             let eventSearchData = event.event.toLowerCase();
             const safeEventName = esc(event.event);
-            
+
             const processChannels = (channels) => {
-                if (Array.isArray(channels)) {
-                    channels.forEach((channel) => {
-                        if (channel.channel_name && channel.channel_id) {
-                            const playerName = channel.channel_name; 
-                            const channelId  = channel.channel_id; 
+                if (!Array.isArray(channels)) return;
+
+                channels.forEach((channel) => {
+                    if (channel.channel_name && channel.channel_id) {
+                        const playerName = channel.channel_name;
+                        const channelId  = channel.channel_id;
+
+                        eventSearchData += ` ${playerName.toLowerCase()}`;
+                        const safePlayerName = esc(playerName);
+
+                        playersHTML += `
+                            <div class="channel-item" data-channel="${playerName.toLowerCase()}">
+                                <a href="#"
+                                class="channel-link"
+                                data-channel-id="${channelId}"
+                                data-channel-name="${safePlayerName}"
+                                data-event-name="${safeEventName}"
+                                data-direct-url="">
+                                    <span style="font-weight: 600;">${safePlayerName}</span>
+                                    <span class="channel-id-badge">ID: ${channelId}</span>
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        // handle direct player links
+                        const playerKey = Object.keys(channel).find(key => key.startsWith('player'));
+                        if (playerKey && channel[playerKey]) {
+                            const playerIndex = playerKey.replace('player', '');
+                            const playerName  = 'Link ' + playerIndex;
+                            const playerUrl   = channel[playerKey];
+
                             eventSearchData += ` ${playerName.toLowerCase()}`;
                             const safePlayerName = esc(playerName);
+
                             playersHTML += `
                                 <div class="channel-item" data-channel="${playerName.toLowerCase()}">
-                                    <a href="#" onclick="handleChannelClick(event, '${channelId}', '${safePlayerName}', '${safeEventName}', null); return false;">
+                                    <a href="#"
+                                    class="channel-link"
+                                    data-channel-id="direct"
+                                    data-channel-name="${safePlayerName}"
+                                    data-event-name="${safeEventName}"
+                                    data-direct-url="${playerUrl}">
                                         <span style="font-weight: 600;">${safePlayerName}</span>
-                                        <span class="channel-id-badge">ID: ${channelId}</span>
+                                        <span class="channel-id-badge">Direct Link</span>
                                     </a>
                                 </div>
                             `;
-                        } else {
-                            const playerKey = Object.keys(channel).find(key => key.startsWith('player'));
-                            if (playerKey && channel[playerKey]) {
-                                const playerIndex = playerKey.replace('player', '');
-                                const playerName  = 'Link ' + playerIndex;
-                                const playerUrl   = channel[playerKey];
-                                eventSearchData  += ` ${playerName.toLowerCase()}`;
-                                const safePlayerName = esc(playerName);
-                                const safeUrl = playerUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                                playersHTML += `
-                                    <div class="channel-item" data-channel="${playerName.toLowerCase()}">
-                                        <a href="#" onclick="handleChannelClick(event, 'direct', '${safePlayerName}', '${safeEventName}', '${safeUrl}'); return false;">
-                                            <span style="font-weight: 600;">${safePlayerName}</span>
-                                            <span class="channel-id-badge">Direct Link</span>
-                                        </a>
-                                    </div>
-                                `;
-                            }
                         }
-                    });
-                }
+                    }
+                });
             };
 
             processChannels(event.channels);
             processChannels(event.channels2);
+
             eventElement.setAttribute('data-search-content', eventSearchData.trim());
 
             eventElement.innerHTML = `
@@ -600,13 +689,17 @@
                 </div>
             `;
 
+            // toggle open/close on event div (but not on links)
             eventElement.onclick = (e) => {
-                if (e.target.closest('.channel-item')) return;
+                if (e.target.closest('.channel-link')) return;
+
                 const playerList = eventElement.querySelector('.channel-list');
                 playerList.classList.toggle('show');
             };
+
             return eventElement;
         }
+
 
         function renderSchedule(data, data2, filterTopCategory) {
             const scheduleContainer = document.getElementById('schedule-container');
@@ -698,12 +791,23 @@
                         if (categoryHasEvents) categoryElements.push(topCategoryElement);
                     });
                 }
-                
+
                 // STEP 5: Append
                 if (categoryElements.length > 0) {
                     const dateElement = document.createElement('div');
                     dateElement.classList.add('event-date');
-                    dateElement.textContent = date;
+
+                    const ukTime = new Date().toLocaleTimeString('en-GB', {
+                        timeZone: 'Europe/London',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    dateElement.innerHTML = `
+                        <div class="date-line">${date}</div>
+                        <div class="time-line">Current UK Time: ${ukTime}</div>
+                    `;
+
                     scheduleContainer.appendChild(dateElement);
                     categoryElements.forEach(element => scheduleContainer.appendChild(element));
                 }
@@ -757,15 +861,27 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            const banner = document.getElementById('topBanner');
-            setTimeout(() => {
-                banner.style.opacity = '0';
-                setTimeout(() => { banner.style.display = 'none'; }, 500);
-            }, 10000);
 
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('.channel-link');
+            if (!link) return;
+
+            e.preventDefault();
+
+            handleChannelClick(
+                e,
+                link.dataset.channelId,
+                link.dataset.channelName,
+                link.dataset.eventName,
+                link.dataset.directUrl || null
+            );
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
             fetchAndRenderSchedule();
         });
+
     </script>
 </body>
 </html>
