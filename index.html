@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,7 +261,7 @@
     <!-- Header -->
     <header class="header">
         <div class="nav">
-            <a class="brand" href="/">Fer & DJ events</a>
+            <a class="brand" href="/">Fer & DJ live events</a>
         </div>
     </header>
 
@@ -295,19 +296,23 @@
         let players = [], currentIndex = 0, currentLabel = "";
 
         function getPlayers(id) {
-            // Encode the ID to safely handle paths like "admin/ppv-sweden-vs-greece/1" in URLs
-            const encodedId = encodeURIComponent(id);
-            return [
-                `https://resportz.cfd/live/stream-${id}.php`,   
-                `https://dlhd.pk/stream/stream-${id}.php`,
-                `https://dlhd.pk/cast/stream-${id}.php`,
-                `https://dlhd.pk/watch/stream-${id}.php`,
-                `https://dlhd.pk/plus/stream-${id}.php`,
-                `https://dlhd.pk/casting/stream-${id}.php`,
-                `https://dlhd.pk/player/stream-${id}.php`,
-                `https://daddylive.eu/embed/embed.php?id=${id}&player=1&source=tv.json`,
-                `https://daddylive.eu/embed/embed.php?id=${id}&player=1&source=tv2.json` 
-            ];
+        return [
+            `https://resportz.cfd/live/stream-${id}.php`,
+            `https://daddylive1.link/my/stream-${id}.php`,
+            `https://dlhd.pk/stream/stream-${id}.php`,
+            `https://dlhd.pk/cast/stream-${id}.php`,
+            `https://dlhd.pk/watch/stream-${id}.php`,
+            `https://dlhd.pk/plus/stream-${id}.php`,
+            `https://dlhd.pk/casting/stream-${id}.php`,
+            `https://dlhd.pk/player/stream-${id}.php`,
+            `https://daddylive.eu/embed/embed.php?id=${id}&player=1&source=tv.json`,
+            `https://donis.jimpenopisonline.online/premiumtv/daddy5.php?id=${id}`,             
+        ];
+        }
+
+        function isNumericId(str) {
+            if (!str) return false;
+            return /^\d+$/.test(str.toString().trim());
         }
 
         function esc(s) { 
@@ -319,7 +324,7 @@
 
         function handleChannelClick(e, channelId, channelName, eventName, directUrl) {
             e.preventDefault();
-            e.stopPropagation(); 
+            e.stopPropagation(); // Prevent the event div from toggling the channel list closed
             
             let playerUrls = [];
             let idTag = '';
@@ -327,13 +332,15 @@
             if (directUrl) {
                 playerUrls = [directUrl];
                 idTag = 'Direct';
-            } else if (channelId) {
-                // Pass the extracted channel_id (whether "529" or "admin/ppv-sweden-vs-greece/1") directly to getPlayers
+            } else if (isNumericId(channelId)) {
                 playerUrls = getPlayers(channelId);
                 idTag = channelId;
+            } else if (channelId && channelId.startsWith('http')) {
+                playerUrls = [channelId];
+                idTag = 'Direct';
             } else {
-                console.warn('No valid player ID found', channelId);
-                alert('Invalid channel ID for this event.');
+                console.warn('No valid player ID or URL found', channelId);
+                alert('Invalid channel ID or URL for this event.');
                 return;
             }
             
@@ -388,6 +395,7 @@
             players = []; currentIndex = 0; currentLabel = "";
         }
 
+        // Keyboard shortcut: ESC to exit player
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && document.getElementById('playerUI').style.display === 'block') {
                 exitStream();
@@ -395,39 +403,90 @@
         });
 
         // ================================================================
-        // 2. SCRAPER LOGIC API (Direct Fetch)
+        // 2. SCRAPER LOGIC API uses “All Origins API” act as a CORS proxy.
         // ================================================================
-        const TARGET_URL_API = 'https://daddylive.eu/api/events';
+        const TARGET_URL_TV = 'https://daddylive.eu/cache/tv/tv.json';
+        const TARGET_URL_TV2 = 'https://daddylive.eu/cache/tv2/tv2.json';
+        const PROXY = 'https://api.allorigins.win/raw?url=';
         
-        let allData = [];
+        let allData = {};
+        let allData2 = {};
         let selectedTopCategory = 'All';
+
 
         async function fetchAndRenderSchedule() {
             const scheduleContainer = document.getElementById('schedule-container');
 
             try {
                 console.time('TOTAL');
-                console.time('API');
 
-                const response = await fetch(TARGET_URL_API);
-                console.timeEnd('API');
+                // -------------------------
+                // TV.JSON
+                // -------------------------
+                console.time('TV');
 
-                if (!response.ok) {
-                    throw new Error(`API HTTP error! status: ${response.status}`);
+                const response1 = await fetch(
+                    PROXY + encodeURIComponent(TARGET_URL_TV)
+                );
+
+                console.timeEnd('TV');
+
+                if (!response1.ok) {
+                    throw new Error(`tv.json HTTP error! status: ${response1.status}`);
                 }
 
-                allData = await response.json();
-                console.log('API DATA:', allData);
+                allData = await response1.json();
 
+                console.log('TV DATA:', allData);
+                console.log('TV DATES:', Object.keys(allData ?? {}));
+
+                // -------------------------
+                // TV2.JSON (optional) >>>>>>>  Need to scrap only "time" and "event"  no "channels" (this is "Live Events" section)
+                // -------------------------
+                console.time('TV2');
+
+                try {
+                    const response2 = await fetch(
+                        PROXY + encodeURIComponent(TARGET_URL_TV2)
+                    );
+
+                    console.timeEnd('TV2');
+
+                    if (response2.ok) {
+                        allData2 = await response2.json();
+
+                        console.log('TV2 DATA:', allData2);
+                        console.log('TV2 DATES:', Object.keys(allData2 ?? {}));
+
+                    } else {
+                        console.warn('TV2 returned:', response2.status);
+                        allData2 = {};
+                    }
+
+                } catch (e) {
+                    console.timeEnd('TV2');
+                    console.warn('tv2.json unavailable:', e.message);
+                    allData2 = {};
+                }
+
+                // -------------------------
+                // RENDER
+                // -------------------------
+                
                 console.time('RENDER');
-                const topcategories = extractTopCategories(allData);
+
+                const topcategories = extractTopCategories(allData, allData2);
+
                 renderTopCategoryFilter(topcategories);
-                renderSchedule(allData, 'All');
-                console.timeEnd('RENDER');
-                console.timeEnd('TOTAL');
+
+                // IMPORTANT: renderSchedule must NOT use inline onclick anymore
+                renderSchedule(allData, allData2, 'All');
+
+                console.timeEnd('RENDER');                
 
             } catch (error) {
                 console.error('❌ Critical Error fetching data:', error);
+
                 scheduleContainer.innerHTML = `
                     <p style="color:red;text-align:center;padding:20px;">
                         Failed to load schedule data from daddylive.eu.<br>
@@ -437,15 +496,16 @@
             }
         }
 
-        function extractTopCategories(data) {
+        function extractTopCategories(data, data2) {
             const topCategoriesSet = new Set();
-            if (data && Array.isArray(data)) {
-                for (const dayObj of data) {
-                    if (dayObj.categories) {
-                        for (const category of Object.keys(dayObj.categories)) {
-                            topCategoriesSet.add(category);
-                        }
-                    }
+            if (data && Object.keys(data).length > 0) {
+                for (const [date, categories] of Object.entries(data)) {
+                    for (const category of Object.keys(categories)) topCategoriesSet.add(category);
+                }
+            }
+            if (data2 && Object.keys(data2).length > 0) {
+                for (const [date, categories] of Object.entries(data2)) {
+                    for (const category of Object.keys(categories)) topCategoriesSet.add(category);
                 }
             }
             return Array.from(topCategoriesSet).sort();
@@ -474,7 +534,22 @@
                 btn.classList.remove('active');
                 if (btn.textContent === topcategory) btn.classList.add('active');
             });
-            renderSchedule(allData, topcategory);
+            renderSchedule(allData, allData2, topcategory);
+        }
+
+        function countTv2Players(event) {
+            let count = 0;
+            if (Array.isArray(event.channels)) {
+                event.channels.forEach((channel) => {
+                    if ((channel.channel_name && channel.channel_id) || Object.keys(channel).some(key => key.startsWith('player'))) count++;
+                });
+            }
+            if (Array.isArray(event.channels2)) {
+                event.channels2.forEach((channel) => {
+                    if ((channel.channel_name && channel.channel_id) || Object.keys(channel).some(key => key.startsWith('player'))) count++;
+                });
+            }
+            return count;
         }
 
         function createEventElement(event) {
@@ -483,48 +558,56 @@
             eventElement.setAttribute('data-event', event.event);
 
             let eventSearchData = event.event.toLowerCase();
+
             const safeEventName = esc(event.event);
 
             const channelsHTML = Array.isArray(event.channels)
                 ? event.channels.map(channel => {
+
                     eventSearchData += ` ${channel.channel_name.toLowerCase()}`;
+
                     const safeChannelName = esc(channel.channel_name);
-                    
-                    // Extract the channel_id directly from the JSON data
-                    const channelId = channel.channel_id || '';
-                    const safeChannelId = esc(channelId);
+                    const safeChannelId = channel.channel_id;
 
                     return `
                         <div class="channel-item"
                             data-channel="${channel.channel_name.toLowerCase()}"
                             data-channel-id="${safeChannelId}">
+
                             <a href="#"
                             class="channel-link"
                             data-channel-id="${safeChannelId}"
                             data-channel-name="${safeChannelName}"
                             data-event-name="${safeEventName}"
                             data-direct-url="">
+
                                 <span style="font-weight: 600;">${safeChannelName}</span>
                                 <span class="channel-id-badge">ID: ${safeChannelId}</span>
+
                             </a>
+
                         </div>
                     `;
                 }).join('')
                 : '';
 
             eventElement.setAttribute('data-search-content', eventSearchData.trim());
+
             eventElement.innerHTML = `
                 <div class="event-content">
                     <div class="event-time">${event.time}</div>
                     <div class="event-description">${safeEventName}</div>
                 </div>
+
                 <div class="channel-list">
                     ${channelsHTML || '<p style="padding: 10px; color: #999; width: 100%; text-align: center;">No channels available</p>'}
                 </div>
             `;
 
+            // toggle open/close
             eventElement.onclick = (e) => {
                 if (e.target.closest('.channel-link')) return;
+
                 const channelList = eventElement.querySelector('.channel-list');
                 channelList.classList.toggle('show');
             };
@@ -532,89 +615,188 @@
             return eventElement;
         }
 
-        function renderSchedule(data, filterTopCategory) {
+
+        function createEventElementTV2(event) {
+            const eventElement = document.createElement('div');
+            eventElement.classList.add('event', 'event-tv2');
+            eventElement.setAttribute('data-event', event.event);
+
+            let playersHTML = '';
+            let eventSearchData = event.event.toLowerCase();
+            const safeEventName = esc(event.event);
+
+            const processChannels = (channels) => {
+                if (!Array.isArray(channels)) return;
+
+                channels.forEach((channel) => {
+                    if (channel.channel_name && channel.channel_id) {
+                        const playerName = channel.channel_name;
+                        const channelId  = channel.channel_id;
+
+                        eventSearchData += ` ${playerName.toLowerCase()}`;
+                        const safePlayerName = esc(playerName);
+
+                        playersHTML += `
+                            <div class="channel-item" data-channel="${playerName.toLowerCase()}">
+                                <a href="#"
+                                class="channel-link"
+                                data-channel-id="${channelId}"
+                                data-channel-name="${safePlayerName}"
+                                data-event-name="${safeEventName}"
+                                data-direct-url="">
+                                    <span style="font-weight: 600;">${safePlayerName}</span>
+                                    <span class="channel-id-badge">ID: ${channelId}</span>
+                                </a>
+                            </div>
+                        `;
+                    } else {
+                        // handle direct player links
+                        const playerKey = Object.keys(channel).find(key => key.startsWith('player'));
+                        if (playerKey && channel[playerKey]) {
+                            const playerIndex = playerKey.replace('player', '');
+                            const playerName  = 'Link ' + playerIndex;
+                            const playerUrl   = channel[playerKey];
+
+                            eventSearchData += ` ${playerName.toLowerCase()}`;
+                            const safePlayerName = esc(playerName);
+
+                            playersHTML += `
+                                <div class="channel-item" data-channel="${playerName.toLowerCase()}">
+                                    <a href="#"
+                                    class="channel-link"
+                                    data-channel-id="direct"
+                                    data-channel-name="${safePlayerName}"
+                                    data-event-name="${safeEventName}"
+                                    data-direct-url="${playerUrl}">
+                                        <span style="font-weight: 600;">${safePlayerName}</span>
+                                        <span class="channel-id-badge">Direct Link</span>
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    }
+                });
+            };
+
+            processChannels(event.channels);
+            processChannels(event.channels2);
+
+            eventElement.setAttribute('data-search-content', eventSearchData.trim());
+
+            eventElement.innerHTML = `
+                <div class="event-content">
+                    <div class="event-time">${event.time}</div>
+                    <div class="event-description">${safeEventName}</div>
+                </div>
+                <div class="channel-list">
+                    ${playersHTML || '<p style="padding: 10px; color: #999; width: 100%; text-align: center;">No players available</p>'}
+                </div>
+            `;
+
+            // toggle open/close on event div (but not on links)
+            eventElement.onclick = (e) => {
+                if (e.target.closest('.channel-link')) return;
+
+                const playerList = eventElement.querySelector('.channel-list');
+                playerList.classList.toggle('show');
+            };
+
+            return eventElement;
+        }
+
+
+        function renderSchedule(data, data2, filterTopCategory) {
             const scheduleContainer = document.getElementById('schedule-container');
             scheduleContainer.innerHTML = '';
+            const sortedDates = data && Object.keys(data).length > 0 ? Object.keys(data).sort() : [];
+            if (sortedDates.length === 0 && data2 && Object.keys(data2).length > 0) sortedDates.push('Live/PPV Events');
 
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                scheduleContainer.innerHTML = '<p style="text-align: center; padding: 20px;">No events available. Please check again after some time.</p>';
-                return;
-            }
+            const renderedTv2Categories = new Set();
+            let popularEvents = [];
 
-            data.forEach(dayObj => {
-                const dayName = dayObj.day;
-                const categories = dayObj.categories;
-                
-                if (!categories) return;
-                
+            sortedDates.forEach(date => {
                 const categoryElements = [];
-                let popularEvents = [];
-
-                // STEP 1: Collect Popular Events dynamically (channels > 10)
-                Object.keys(categories).forEach(topcategory => {
-                    const events = categories[topcategory];
-                    if (Array.isArray(events)) {
+                
+                // STEP 1: TV2 events first (Live/PPV)
+                if (data2 && Object.keys(data2).length > 0) {
+                    for (const [tv2DateKey, tv2Categories] of Object.entries(data2)) {
+                        Object.keys(tv2Categories).forEach(topcategory => {
+                            if (renderedTv2Categories.has(topcategory)) return;
+                            let events = tv2Categories[topcategory];
+                            if (filterTopCategory !== 'All' && filterTopCategory !== topcategory) return;
+                            events.sort((a, b) => countTv2Players(b) - countTv2Players(a));
+                            
+                            let categoryHasEvents = false;
+                            const topCategoryElement = document.createElement('div');
+                            topCategoryElement.classList.add('topcategory-section');
+                            topCategoryElement.setAttribute('data-topcategory', topcategory);
+                            const topCategoryTitle = document.createElement('h2');
+                            topCategoryTitle.textContent = topcategory;
+                            topCategoryElement.appendChild(topCategoryTitle);
+                            
+                            events.forEach(event => {
+                                topCategoryElement.appendChild(createEventElementTV2(event));
+                                categoryHasEvents = true;
+                            });
+                            if (categoryHasEvents) {
+                                categoryElements.push(topCategoryElement);
+                                renderedTv2Categories.add(topcategory);
+                            }
+                        });
+                        break; 
+                    }
+                }
+                
+                // STEP 2: Collect popular events from TV.json
+                if (data && data[date]) {
+                    Object.keys(data[date]).forEach(topcategory => {
+                        const events = data[date][topcategory];
                         events.forEach(event => {
                             if (event.channels && Array.isArray(event.channels) && event.channels.length > 10) {
                                 popularEvents.push({ event: event, element: createEventElement(event) });
                             }
                         });
+                    });
+                }
+                
+                // STEP 3: Popular section
+                if (date === sortedDates[0]) {
+                    if (popularEvents.length > 0 && (filterTopCategory === 'All' || filterTopCategory === 'Popular Events')) {
+                        const popularSection = document.createElement('div');
+                        popularSection.classList.add('topcategory-section');
+                        popularSection.setAttribute('data-topcategory', 'Popular Events');
+                        const popularTitle = document.createElement('h2');
+                        popularTitle.textContent = 'Popular Events';
+                        popularSection.appendChild(popularTitle);
+                        popularEvents.forEach(item => popularSection.appendChild(item.element));
+                        categoryElements.splice(categoryElements.length, 0, popularSection);
                     }
-                });
-
-                // STEP 2: Add Popular Events section if it has events and is selected (or 'All')
-                if (popularEvents.length > 0 && (filterTopCategory === 'All' || filterTopCategory === 'Popular Events')) {
-                    const popularSection = document.createElement('div');
-                    popularSection.classList.add('topcategory-section');
-                    popularSection.setAttribute('data-topcategory', 'Popular Events');
-                    const popularTitle = document.createElement('h2');
-                    popularTitle.textContent = 'Popular Events';
-                    popularSection.appendChild(popularTitle);
-                    popularEvents.forEach(item => popularSection.appendChild(item.element));
-                    categoryElements.push(popularSection);
                 }
 
-                // STEP 3: Process regular categories
-                Object.keys(categories).forEach(topcategory => {
-                    if (topcategory === 'Popular Events') return;
-
-                    // Filtering logic with flexible matching for Live Events
-                    if (filterTopCategory !== 'All') {
-                        const isExactMatch = topcategory.trim().toLowerCase() === filterTopCategory.trim().toLowerCase();
-                        const isLiveMatch = filterTopCategory === 'Live Events' && (topcategory.toLowerCase().includes('live') || topcategory.toLowerCase().includes('ppv'));
+                // STEP 4: Remaining TV events
+                if (data && data[date]) {
+                    Object.keys(data[date]).forEach(topcategory => {
+                        if (topcategory === 'Live Events' || topcategory === 'Popular Events') return;
+                        const events = data[date][topcategory];
+                        if (filterTopCategory !== 'All' && filterTopCategory !== topcategory) return;
                         
-                        if (!isExactMatch && !isLiveMatch) {
-                            return;
-                        }
-                    }
-                    
-                    const events = categories[topcategory];
-                    if (!events || !Array.isArray(events) || events.length === 0) return;
-                    
-                    let categoryHasEvents = false;
-                    const topCategoryElement = document.createElement('div');
-                    topCategoryElement.classList.add('topcategory-section');
-                    topCategoryElement.setAttribute('data-topcategory', topcategory);
-                    
-                    const topCategoryTitle = document.createElement('h2');
-                    topCategoryTitle.textContent = topcategory;
-                    topCategoryElement.appendChild(topCategoryTitle);
-                    
-                    events.forEach(event => {
-                        topCategoryElement.appendChild(createEventElement(event));
-                        categoryHasEvents = true;
+                        let categoryHasEvents = false;
+                        const topCategoryElement = document.createElement('div');
+                        topCategoryElement.classList.add('topcategory-section');
+                        topCategoryElement.setAttribute('data-topcategory', topcategory);
+                        const topCategoryTitle = document.createElement('h2');
+                        topCategoryTitle.textContent = topcategory;
+                        topCategoryElement.appendChild(topCategoryTitle);
+                        
+                        events.forEach(event => {
+                            topCategoryElement.appendChild(createEventElement(event));
+                            categoryHasEvents = true;
+                        });
+                        if (categoryHasEvents) categoryElements.push(topCategoryElement);
                     });
-                    
-                    if (categoryHasEvents) {
-                        // Push 'Live Events' to the top if it matches, otherwise append
-                        if (topcategory.toLowerCase().includes('live') || topcategory.toLowerCase().includes('ppv')) {
-                            categoryElements.unshift(topCategoryElement);
-                        } else {
-                            categoryElements.push(topCategoryElement);
-                        }
-                    }
-                });
-                
+                }
+
+                // STEP 5: Append
                 if (categoryElements.length > 0) {
                     const dateElement = document.createElement('div');
                     dateElement.classList.add('event-date');
@@ -626,7 +808,7 @@
                     });
 
                     dateElement.innerHTML = `
-                        <div class="date-line">${dayName} - Schedule Time UK GMT</div>
+                        <div class="date-line">${date}</div>
                         <div class="time-line">Current UK Time: ${ukTime}</div>
                     `;
 
@@ -636,7 +818,7 @@
             });
 
             if (scheduleContainer.children.length === 0) {
-                scheduleContainer.innerHTML = '<p style="text-align: center; padding: 20px;">No events available for this category. Please check again after some time.</p>';
+                scheduleContainer.innerHTML = '<p style="text-align: center; padding: 20px;">No events available. Please check again after some time.</p>';
             }
         }
 
@@ -682,10 +864,14 @@
             return null;
         }
 
+        // Initialize
+
         document.addEventListener('click', function (e) {
             const link = e.target.closest('.channel-link');
             if (!link) return;
+
             e.preventDefault();
+
             handleChannelClick(
                 e,
                 link.dataset.channelId,
@@ -694,6 +880,7 @@
                 link.dataset.directUrl || null
             );
         });
+
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchAndRenderSchedule();
